@@ -1,6 +1,5 @@
 export default {
   clearMocks: true,
-  collectCoverageFrom: ['**/*.(t|j)s'],
   coverageDirectory: '../coverage',
   coverageProvider: 'v8',
   rootDir: 'src',
