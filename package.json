@@ -11,7 +11,8 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": "./dist/index.js",
-    "./configuration": "./dist/configuration.index.js"
+    "./configuration": "./dist/configuration.index.js",
+    "./service-cache": "./dist/service-cache.index.js"
   },
   "files": [
     "dist/",
