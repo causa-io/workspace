@@ -12,7 +12,8 @@
   "exports": {
     ".": "./dist/index.js",
     "./configuration": "./dist/configuration.index.js",
-    "./service-cache": "./dist/service-cache.index.js"
+    "./service-cache": "./dist/service-cache.index.js",
+    "./validation": "./dist/validation.index.js"
   },
   "files": [
     "dist/",
