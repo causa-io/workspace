@@ -3,12 +3,16 @@
   "version": "0.1.0",
   "description": "Provides the base functionalities for a workspace: configuration loading and registering functions.",
   "repository": "github:causa-io/workspace",
-  "main": "dist/index.js",
   "type": "module",
   "engines": {
     "node": ">=16"
   },
+  "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./configuration": "./dist/configuration.index.js"
+  },
   "files": [
     "dist/",
     "package.json",
