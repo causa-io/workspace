@@ -4,9 +4,15 @@ import {
   ConfigurationValueNotFoundError,
   PartialConfiguration,
 } from '../configuration/index.js';
+import { InvalidFunctionArgumentError } from '../function-registry/index.js';
 import { BaseConfiguration } from './base-configuration.js';
 import { WorkspaceContext } from './context.js';
-import { ContextNotAProjectError, EnvironmentNotSetError } from './errors.js';
+import {
+  ContextNotAProjectError,
+  EnvironmentNotSetError,
+  ModuleNotFoundError,
+} from './errors.js';
+import { MyFunction, MyFunctionImpl } from './module.test.js';
 import { writeConfiguration } from './utils.test.js';
 
 describe('WorkspaceContext', () => {
@@ -107,6 +113,111 @@ describe('WorkspaceContext', () => {
       expect(actualContext.environment).toEqual('dev');
       expect(actualContext.get('myService.myValue')).toEqual('🎉');
       expect(actualContext.logger).toBe(baseContext.logger);
+    });
+  });
+
+  describe('modules', () => {
+    it('should load the module', async () => {
+      const configuration: PartialConfiguration<BaseConfiguration> & {
+        [k: string]: any;
+      } = {
+        workspace: { name: 'my-workspace' },
+        causa: { modules: ['./module.test.ts'] },
+        myFunction: { returnValue: '🎉' },
+      };
+      await writeConfiguration(tmpDir, './causa.yaml', configuration);
+
+      const context = await WorkspaceContext.init({
+        workingDirectory: tmpDir,
+      });
+
+      const actualReturnValue = await context.callByName('MyFunction', {});
+      expect(actualReturnValue).toEqual('🎉');
+    });
+
+    it('should throw when a module cannot be found', async () => {
+      const configuration: PartialConfiguration<BaseConfiguration> & {
+        [k: string]: any;
+      } = {
+        workspace: { name: 'my-workspace' },
+        causa: { modules: ['./❓.ts'] },
+      };
+      await writeConfiguration(tmpDir, './causa.yaml', configuration);
+
+      const actualPromise = WorkspaceContext.init({
+        workingDirectory: tmpDir,
+      });
+
+      await expect(actualPromise).rejects.toThrow(ModuleNotFoundError);
+    });
+  });
+
+  describe('functions', () => {
+    beforeEach(async () => {
+      const configuration: PartialConfiguration<BaseConfiguration> & {
+        [k: string]: any;
+      } = {
+        workspace: { name: 'my-workspace' },
+        causa: { modules: ['./module.test.ts'] },
+        myFunction: { returnValue: '🎉' },
+      };
+      await writeConfiguration(tmpDir, './causa.yaml', configuration);
+    });
+
+    it('should call the function', async () => {
+      const context = await WorkspaceContext.init({
+        workingDirectory: tmpDir,
+      });
+
+      const actualReturnValue = context.call(MyFunction, {});
+
+      expect(actualReturnValue).toEqual('🎉');
+    });
+
+    it('should validate function arguments', async () => {
+      const context = await WorkspaceContext.init({
+        workingDirectory: tmpDir,
+      });
+
+      const actualDefinition = await context.validateFunctionArguments(
+        'MyFunction',
+        {},
+      );
+      const actualPromise = context.validateFunctionArguments(MyFunction, {
+        nope: '💣',
+      });
+
+      expect(actualDefinition).toBe(MyFunction);
+      await expect(actualPromise).rejects.toThrow(InvalidFunctionArgumentError);
+    });
+
+    it('should return function definitions', async () => {
+      const context = await WorkspaceContext.init({
+        workingDirectory: tmpDir,
+      });
+
+      const actualDefinitions = context.getFunctionDefinitions();
+
+      expect(actualDefinitions).toEqual([MyFunction]);
+    });
+
+    it('should return function implementations', async () => {
+      const context = await WorkspaceContext.init({
+        workingDirectory: tmpDir,
+      });
+
+      const actualImplementation = context.getFunctionImplementation(
+        MyFunction,
+        {},
+      );
+      const actualImplementations = context.getFunctionImplementations(
+        MyFunction,
+        {},
+      );
+
+      expect(actualImplementation).toBeInstanceOf(MyFunctionImpl);
+      expect(actualImplementations).toHaveLength(1);
+      expect(actualImplementations[0]).toBeInstanceOf(MyFunctionImpl);
     });
   });
 });

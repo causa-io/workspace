@@ -1,6 +1,13 @@
 import { resolve } from 'path';
 import { Logger, pino } from 'pino';
 import { GetFieldType } from '../configuration/index.js';
+import {
+  FunctionRegistry,
+  ImplementableFunctionArguments,
+  ImplementableFunctionDefinitionConstructor,
+  ImplementableFunctionReturnType,
+  NoImplementationFoundError,
+} from '../function-registry/index.js';
 import { BaseConfiguration } from './base-configuration.js';
 import {
   TypedWorkspaceConfiguration,
@@ -11,6 +18,9 @@ import {
   ContextNotAProjectError,
   EnvironmentNotSetError,
 } from './errors.js';
+import { WorkspaceFunction } from './functions.js';
+import { loadModules } from './modules.js';
+
 /**
  * Options when initializing or cloning a {@link WorkspaceContext}.
  */
@@ -48,6 +58,8 @@ export class WorkspaceContext {
    *   May be `null` if the working directory is outside of a project (but still part of a workspace).
    * @param configuration The {@link ConfigurationReader} exposing the configuration loaded from possibly several
    *   sources.
+   * @param functionRegistry The registry keeping a reference of all available implementations of
+   *   {@link WorkspaceFunction}s.
    * @param logger The logger that can be used when performing operations within the context.
    */
   private constructor(
@@ -56,6 +68,7 @@ export class WorkspaceContext {
     readonly rootPath: string,
     readonly projectPath: string | null,
     private readonly configuration: WorkspaceConfiguration,
+    private readonly functionRegistry: FunctionRegistry<WorkspaceContext>,
     readonly logger: Logger,
   ) {
   }
@@ -123,6 +136,96 @@ export class WorkspaceContext {
   }
 
   /**
+   * Looks up a function definition and calls the corresponding implementation, using this context.
+   *
+   * @param definition The constructor of the abstract class defining the function.
+   * @param args Arguments to pass to the function.
+   * @returns The result of the function call.
+   */
+  call<D extends WorkspaceFunction<any>>(
+    definition: ImplementableFunctionDefinitionConstructor<D>,
+    args: ImplementableFunctionArguments<D>,
+  ): ImplementableFunctionReturnType<D> {
+    return this.functionRegistry.call(definition, args, this);
+  }
+
+  /**
+   * Looks up a function definition using its name (i.e. the name of the class / constructor), validates the passed
+   * arguments, and calls the function implementation.
+   * Unlike {@link WorkspaceContext.call}, arguments are fully validated using
+   * {@link FunctionRegistry.validateArguments}, because calling a function by its name is more likely to occur in a
+   * scenario where the function is not known at build time, and the arguments haven't even been statically checked.
+   * The result is a promise even if the function is synchronous because validation of the arguments is asynchronous.
+   *
+   * @param definitionName The name of the {@link ImplementableFunctionDefinitionConstructor} to find.
+   * @param args Arguments to pass to the function.
+   * @returns The result of the function call.
+   */
+  async callByName<R = any>(
+    definitionName: string,
+    args: Record<string, any>,
+  ): Promise<R> {
+    const definition = await this.validateFunctionArguments(
+      definitionName,
+      args,
+    );
+    return this.call(definition, args);
+  }
+
+  /**
+   * Validates a {@link WorkspaceFunction} arguments by calling {@link FunctionRegistry.validateArguments}.
+   *
+   * @param definition The constructor of the abstract class defining the function, or its name.
+   * @param args The arguments to validate.
+   * @returns The function definition.
+   */
+  async validateFunctionArguments<D extends WorkspaceFunction<any>>(
+    definition: string | ImplementableFunctionDefinitionConstructor<D>,
+    args: ImplementableFunctionArguments<D>,
+  ): Promise<ImplementableFunctionDefinitionConstructor<D>> {
+    return await this.functionRegistry.validateArguments(definition, args);
+  }
+
+  /**
+   * Returns the list of all known function definitions (for which at least one implementation exists).
+   *
+   * @returns The list of function definitions.
+   */
+  getFunctionDefinitions(): ImplementableFunctionDefinitionConstructor<
+    WorkspaceFunction<any>
+  >[] {
+    return this.functionRegistry.getDefinitions();
+  }
+
+  /**
+   * Finds the implementation of a given workspace function that supports this context.
+   *
+   * @param definition The constructor of the abstract class defining the function.
+   * @param args Arguments to pass to the function.
+   * @returns The implementation supporting execution in the current context.
+   */
+  getFunctionImplementation<D extends WorkspaceFunction<any>>(
+    definition: ImplementableFunctionDefinitionConstructor<D>,
+    args: ImplementableFunctionArguments<D>,
+  ): D {
+    return this.functionRegistry.getImplementation(definition, args, this);
+  }
+
+  /**
+   * Finds the implementations of a given workspace function that supports this context.
+   *
+   * @param definition The constructor of the abstract class defining the function.
+   * @param args Arguments to pass to the function.
+   * @returns The implementations supporting execution in the current context.
+   */
+  getFunctionImplementations<D extends WorkspaceFunction<any>>(
+    definition: ImplementableFunctionDefinitionConstructor<D>,
+    args: ImplementableFunctionArguments<D>,
+  ): D[] {
+    return this.functionRegistry.getImplementations(definition, args, this);
+  }
+
+  /**
    * Returns a new context configured identically to this one, unless specified by `options`.
    *
    * @param options Parameters to override when initializing the context.
@@ -158,12 +261,17 @@ export class WorkspaceContext {
     const { configuration, rootPath, projectPath } =
       await loadWorkspaceConfiguration(workingDirectory, environment, logger);
 
+    const functionRegistry = new FunctionRegistry(WorkspaceFunction);
+
+    await loadModules(configuration, functionRegistry, logger);
+
     let context = new WorkspaceContext(
       workingDirectory,
       environment,
       rootPath,
       projectPath,
       configuration,
+      functionRegistry,
       logger,
     );
 

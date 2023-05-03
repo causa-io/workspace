@@ -29,3 +29,12 @@ export class EnvironmentNotSetError extends WorkspaceContextError {
  * An error thrown when the file(s) found in the workspace are invalid.
  */
 export class InvalidWorkspaceConfigurationFilesError extends WorkspaceContextError {}
+
+/**
+ * An error thrown when the module to load cannot be found.
+ */
+export class ModuleNotFoundError extends WorkspaceContextError {
+  constructor(readonly moduleName: string) {
+    super(`The module to load '${moduleName}' could not be found.`);
+  }
+}
