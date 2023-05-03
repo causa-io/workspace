@@ -220,4 +220,27 @@ describe('WorkspaceContext', () => {
       expect(actualImplementations[0]).toBeInstanceOf(MyFunctionImpl);
     });
   });
+
+  describe('services', () => {
+    class MyService {
+      constructor(readonly context: WorkspaceContext) {}
+    }
+
+    it('should instantiate and return the service', async () => {
+      const configuration: PartialConfiguration<BaseConfiguration> = {
+        workspace: { name: 'my-workspace' },
+      };
+      await writeConfiguration(tmpDir, './causa.yaml', configuration);
+      const context = await WorkspaceContext.init({
+        workingDirectory: tmpDir,
+      });
+
+      const actualService1 = context.service(MyService);
+      const actualService2 = context.service(MyService);
+
+      expect(actualService1).toBeInstanceOf(MyService);
+      expect(actualService1).toBe(actualService2);
+      expect(actualService1.context).toBe(context);
+    });
+  });
 });

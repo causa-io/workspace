@@ -8,6 +8,7 @@ import {
   ImplementableFunctionReturnType,
   NoImplementationFoundError,
 } from '../function-registry/index.js';
+import { ServiceCache } from '../service-cache/index.js';
 import { BaseConfiguration } from './base-configuration.js';
 import {
   TypedWorkspaceConfiguration,
@@ -20,6 +21,7 @@ import {
 } from './errors.js';
 import { WorkspaceFunction } from './functions.js';
 import { loadModules } from './modules.js';
+import { WorkspaceServiceConstructor } from './services.js';
 
 /**
  * Options when initializing or cloning a {@link WorkspaceContext}.
@@ -48,6 +50,11 @@ export type WorkspaceContextOptions = {
  */
 export class WorkspaceContext {
   /**
+   * The cache holding a reference to singleton instances of services.
+   */
+  private readonly serviceCache: ServiceCache<WorkspaceContext>;
+
+  /**
    * Creates a new {@link WorkspaceContext}.
    *
    * @param workingDirectory The reference directory for the functions to run, also used as the starting point of
@@ -71,6 +78,7 @@ export class WorkspaceContext {
     private readonly functionRegistry: FunctionRegistry<WorkspaceContext>,
     readonly logger: Logger,
   ) {
+    this.serviceCache = new ServiceCache(this);
   }
 
   /**
@@ -223,6 +231,16 @@ export class WorkspaceContext {
     args: ImplementableFunctionArguments<D>,
   ): D[] {
     return this.functionRegistry.getImplementations(definition, args, this);
+  }
+
+  /**
+   * Returns the singleton instance for the given service.
+   *
+   * @param constructor The constructor for the service.
+   * @returns The singleton instance for the service.
+   */
+  service<T extends object>(constructor: WorkspaceServiceConstructor<T>) {
+    return this.serviceCache.get(constructor);
   }
 
   /**

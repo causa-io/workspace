@@ -7,3 +7,4 @@ export {
   ModuleRegistrationContext,
   ModuleRegistrationFunction,
 } from './modules.js';
+export { WorkspaceServiceConstructor } from './services.js';
