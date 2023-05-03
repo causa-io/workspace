@@ -1,6 +1,14 @@
-export default {
+import type { Config } from 'jest';
+
+const config: Config = {
   clearMocks: true,
   coverageDirectory: '../coverage',
+  collectCoverageFrom: [
+    '**/*.{js,ts}',
+    '!**/index.ts',
+    '!**/*.spec.ts',
+    '!**/*.test.ts',
+  ],
   coverageProvider: 'v8',
   rootDir: 'src',
   testEnvironment: 'node',
@@ -15,3 +23,5 @@ export default {
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
 };
+
+export default config;
