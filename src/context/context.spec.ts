@@ -365,4 +365,23 @@ describe('WorkspaceContext', () => {
       expect(actualValue).toEqual(actualValue2);
     });
   });
+
+  describe('processors', () => {
+    it('should call the processor and update the configuration', async () => {
+      const configuration: PartialConfiguration<BaseConfiguration> & {
+        [k: string]: any;
+      } = {
+        workspace: { name: 'my-workspace' },
+        causa: { modules: ['./processor.test.ts'] },
+        processors: [{ name: 'MyProcessor', args: { value: '🔧' } }],
+      };
+      await writeConfiguration(tmpDir, './causa.yaml', configuration);
+
+      const actualContext = await WorkspaceContext.init({
+        workingDirectory: tmpDir,
+      });
+
+      expect(actualContext.get('myProcessorConf')).toEqual('🔧');
+    });
+  });
 });

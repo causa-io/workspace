@@ -14,6 +14,7 @@ import {
   TypedWorkspaceConfiguration,
   WorkspaceConfiguration,
   loadWorkspaceConfiguration,
+  makeProcessorConfiguration,
 } from './configuration.js';
 import {
   ContextNotAProjectError,
@@ -334,6 +335,41 @@ export class WorkspaceContext {
   }
 
   /**
+   * Updates the context by running a processor and merging the returned configuration in the current one.
+   * A processor is simply a {@link WorkspaceFunction} referenced by the name of its definition. It is called with the
+   * passed arguments, which are first validated. The processor is expected to return a partial configuration, which
+   * will be merged with the current one.
+   * Although this method returns a copy of the {@link WorkspaceContext}, the original context **should no longer be
+   * referenced**. To keep a copy of the context, use {@link WorkspaceContext.clone} instead.
+   *
+   * @param name The name of the processor to apply.
+   * @param args The arguments when calling the processor.
+   * @returns The {@link WorkspaceContext} with an updated configuration.
+   */
+  private async withProcessor(
+    name: string,
+    args: Record<string, any>,
+  ): Promise<WorkspaceContext> {
+    this.logger.debug(`🔨 Running processor '${name}'.`);
+
+    const configuration = await this.callByName(name, args);
+    const processorConfiguration = makeProcessorConfiguration(
+      name,
+      configuration,
+    );
+
+    return new WorkspaceContext(
+      this.workingDirectory,
+      this.environment,
+      this.rootPath,
+      this.projectPath,
+      this.configuration.mergedWith(processorConfiguration),
+      this.functionRegistry,
+      this.logger,
+    );
+  }
+
+  /**
    * Initializes a {@link WorkspaceContext}, loading the configuration starting from
    * {@link WorkspaceContextOptions.workingDirectory}.
    * Modules will be loaded according to the configuration found in the workspace.
@@ -364,6 +400,10 @@ export class WorkspaceContext {
       functionRegistry,
       logger,
     );
+
+    for (const { name, args } of context.get('processors') ?? []) {
+      context = await context.withProcessor(name, args ?? {});
+    }
 
     logger.debug(`🎉 Successfully initialized context.`);
 
