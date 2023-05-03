@@ -18,9 +18,13 @@ import {
 import {
   ContextNotAProjectError,
   EnvironmentNotSetError,
+  InvalidSecretDefinitionError,
+  SecretBackendNotFoundError,
+  SecretBackendNotSpecifiedError,
 } from './errors.js';
 import { WorkspaceFunction } from './functions.js';
 import { loadModules } from './modules.js';
+import { SecretFetch } from './secrets.js';
 import { WorkspaceServiceConstructor } from './services.js';
 
 /**
@@ -134,6 +138,38 @@ export class WorkspaceContext {
   }
 
   /**
+   * Renders the value at a given path in the configuration object, by recursively walking the value and processing
+   * templates.
+   *
+   * @param path The path to the value in the configuration object.
+   * @returns The value after rendering.
+   */
+  async getAndRender<TPath extends string>(
+    path: TPath,
+  ): Promise<GetFieldType<BaseConfiguration, TPath>> {
+    return await this.configuration.getAndRender(
+      { secret: (secretId: string) => this.secret(secretId) },
+      path,
+    );
+  }
+
+  /**
+   * Renders the value at a given path in the configuration object, by recursively walking the value and processing
+   * templates. If the value does not exist in the configuration, this throws an error instead of returning `undefined`.
+   *
+   * @param path The path to the value in the configuration object.
+   * @returns The value after rendering.
+   */
+  async getAndRenderOrThrow<TPath extends string>(
+    path: TPath,
+  ): Promise<Exclude<GetFieldType<BaseConfiguration, TPath>, undefined>> {
+    return await this.configuration.getAndRenderOrThrow(
+      { secret: (secretId: string) => this.secret(secretId) },
+      path,
+    );
+  }
+
+  /**
    * Returns an object that can be used to get configuration values with project-specific types.
    * This is simply syntactic sugar for TypeScript, and does not actually enforce the configuration types.
    *
@@ -231,6 +267,42 @@ export class WorkspaceContext {
     args: ImplementableFunctionArguments<D>,
   ): D[] {
     return this.functionRegistry.getImplementations(definition, args, this);
+  }
+
+  /**
+   * Fetches the given secret.
+   *
+   * @param secretId The ID of the secret.
+   * @returns The fetched secret.
+   */
+  async secret(secretId: string): Promise<string> {
+    this.logger.debug(`🔐 Accessing secret with ID '${secretId}'.`);
+    const secret = this.getOrThrow(`secrets.${secretId}`);
+    if (!secret || typeof secret !== 'object') {
+      throw new InvalidSecretDefinitionError(`Expected an object.`, secretId);
+    }
+
+    let { backend, ...configuration } = secret;
+    if (!backend) {
+      backend = this.get('causa.secrets.defaultBackend');
+    }
+    if (!backend) {
+      throw new SecretBackendNotSpecifiedError(secretId);
+    }
+
+    try {
+      return await this.call(SecretFetch, { backend, configuration });
+    } catch (error) {
+      if (error instanceof NoImplementationFoundError) {
+        throw new SecretBackendNotFoundError(backend);
+      }
+
+      if (error instanceof InvalidSecretDefinitionError) {
+        throw new InvalidSecretDefinitionError(error.message, secretId);
+      }
+
+      throw error;
+    }
   }
 
   /**

@@ -1,4 +1,5 @@
 import { mkdtemp, rm } from 'fs/promises';
+import 'jest-extended';
 import { join, resolve } from 'path';
 import {
   ConfigurationValueNotFoundError,
@@ -10,7 +11,10 @@ import { WorkspaceContext } from './context.js';
 import {
   ContextNotAProjectError,
   EnvironmentNotSetError,
+  InvalidSecretDefinitionError,
   ModuleNotFoundError,
+  SecretBackendNotFoundError,
+  SecretBackendNotSpecifiedError,
 } from './errors.js';
 import { MyFunction, MyFunctionImpl } from './module.test.js';
 import { writeConfiguration } from './utils.test.js';
@@ -241,6 +245,124 @@ describe('WorkspaceContext', () => {
       expect(actualService1).toBeInstanceOf(MyService);
       expect(actualService1).toBe(actualService2);
       expect(actualService1.context).toBe(context);
+    });
+  });
+
+  describe('secrets', () => {
+    let context: WorkspaceContext;
+
+    beforeEach(async () => {
+      const configuration: PartialConfiguration<BaseConfiguration> & {
+        [k: string]: any;
+      } = {
+        workspace: { name: 'my-workspace' },
+        causa: {
+          modules: ['./secrets.test.ts'],
+          secrets: { defaultBackend: 'default' },
+        },
+        secrets: {
+          mySecret: { someConf: '🔑' },
+          mySecretWithBackend: { backend: 'custom', otherConf: '🙏' },
+          invalidDefinition: { backend: 'invalidDefinition' },
+          unknownBackend: { backend: 'unknown' },
+          notAnObject: '💥' as any,
+        },
+        otherValue: '🎉',
+        someValue: {
+          $format: "${ secret('mySecret') }${ configuration('otherValue') }",
+        },
+      };
+      await writeConfiguration(tmpDir, './causa.yaml', configuration);
+      context = await WorkspaceContext.init({
+        workingDirectory: tmpDir,
+      });
+    });
+
+    it('should throw if the secret does not exist', async () => {
+      const actualPromise = context.secret('🔍');
+
+      await expect(actualPromise).rejects.toThrow(
+        ConfigurationValueNotFoundError,
+      );
+    });
+
+    it('should throw if the secret definition is invalid', async () => {
+      const actualPromise = context.secret('notAnObject');
+
+      await expect(actualPromise).rejects.toThrow(InvalidSecretDefinitionError);
+    });
+
+    it('should fetch the secret using the default backend', async () => {
+      const actualSecret = await context.secret('mySecret');
+
+      expect(JSON.parse(actualSecret)).toEqual({
+        backend: 'default',
+        configuration: { someConf: '🔑' },
+      });
+    });
+
+    it('should fetch the secret using the specified backend', async () => {
+      const actualSecret = await context.secret('mySecretWithBackend');
+
+      expect(JSON.parse(actualSecret)).toEqual({
+        backend: 'custom',
+        configuration: { otherConf: '🙏' },
+      });
+    });
+
+    it('should rethrow the error when a secret definition is invalid', async () => {
+      const actualPromise = context.secret('invalidDefinition');
+
+      await expect(actualPromise).rejects.toThrowError(
+        InvalidSecretDefinitionError,
+      );
+      await expect(actualPromise).rejects.toMatchObject({
+        secretId: 'invalidDefinition',
+      });
+    });
+
+    it('should throw when no implementation exists for the backend', async () => {
+      const actualPromise = context.secret('unknownBackend');
+
+      await expect(actualPromise).rejects.toThrowError(
+        SecretBackendNotFoundError,
+      );
+    });
+
+    it('should throw when the backend is not specified', async () => {
+      const configuration: PartialConfiguration<BaseConfiguration> & {
+        [k: string]: any;
+      } = {
+        workspace: { name: 'my-workspace' },
+        causa: { modules: ['./secrets.test.ts'] },
+        secrets: { mySecret: { someConf: '🔑' } },
+      };
+      await writeConfiguration(tmpDir, './causa.yaml', configuration);
+      context = await WorkspaceContext.init({
+        workingDirectory: tmpDir,
+      });
+
+      const actualPromise = context.secret('mySecret');
+
+      await expect(actualPromise).rejects.toThrow(
+        SecretBackendNotSpecifiedError,
+      );
+    });
+
+    it('should render the configuration with secrets', async () => {
+      const actualValue = (await context.getAndRender(
+        'someValue',
+      )) as unknown as string;
+      const actualValue2 = (await context.getAndRenderOrThrow(
+        'someValue',
+      )) as unknown as string;
+
+      expect(actualValue).toEndWith('🎉');
+      expect(JSON.parse(actualValue.replace('🎉', ''))).toEqual({
+        backend: 'default',
+        configuration: { someConf: '🔑' },
+      });
+      expect(actualValue).toEqual(actualValue2);
     });
   });
 });

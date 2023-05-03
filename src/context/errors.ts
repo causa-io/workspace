@@ -38,3 +38,55 @@ export class ModuleNotFoundError extends WorkspaceContextError {
     super(`The module to load '${moduleName}' could not be found.`);
   }
 }
+
+/**
+ * The base class for secret-related errors.
+ */
+export class SecretError extends Error {}
+
+/**
+ * An error thrown when the secret definition found in the configuration is invalid.
+ */
+export class InvalidSecretDefinitionError extends SecretError {
+  /**
+   * Creates a new {@link InvalidSecretDefinitionError}.
+   *
+   * @param message The message describing the error.
+   * @param secretId The ID of the secret.
+   *   When throwing the error from a secret backend, this can be left undefined and will be populated by the fetcher.
+   */
+  constructor(message: string, readonly secretId?: string) {
+    super(
+      secretId
+        ? `Invalid definition for secret '${secretId}': ${message}`
+        : message,
+    );
+  }
+}
+
+/**
+ * An error thrown when a secret references a backend that does not exist.
+ */
+export class SecretBackendNotFoundError extends SecretError {
+  constructor(readonly backendId: string) {
+    super(`Secret backend with ID '${backendId}' has not been registered.`);
+  }
+}
+
+/**
+ * An error thrown when the backend is not specified for a secret.
+ * This means the secret's configuration does not have a `backend` value, and `causa.secrets.defaultBackend` is not
+ * defined.
+ */
+export class SecretBackendNotSpecifiedError extends SecretError {
+  constructor(readonly secretId: string) {
+    super(
+      `Secret with ID '${secretId}' cannot be fetched because no backend is specified.`,
+    );
+  }
+}
+
+/**
+ * An error that can be thrown by any backend when the value for a secret cannot be fetched.
+ */
+export class SecretValueNotFoundError extends SecretError {}

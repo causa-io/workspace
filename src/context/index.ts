@@ -7,4 +7,5 @@ export {
   ModuleRegistrationContext,
   ModuleRegistrationFunction,
 } from './modules.js';
+export { SecretFetch } from './secrets.js';
 export { WorkspaceServiceConstructor } from './services.js';
