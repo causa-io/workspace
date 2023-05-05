@@ -40,6 +40,20 @@ export class ModuleNotFoundError extends WorkspaceContextError {
 }
 
 /**
+ * An error thrown when the version of the module to load cannot be fetched, or when the version does not match the
+ * requirement from the configuration.
+ */
+export class ModuleVersionError extends WorkspaceContextError {
+  constructor(
+    readonly moduleName: string,
+    readonly moduleVersion: string,
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
+/**
  * The base class for secret-related errors.
  */
 export class SecretError extends Error {}

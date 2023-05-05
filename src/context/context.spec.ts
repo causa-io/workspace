@@ -15,6 +15,7 @@ import {
   EnvironmentNotSetError,
   InvalidSecretDefinitionError,
   ModuleNotFoundError,
+  ModuleVersionError,
   SecretBackendNotFoundError,
   SecretBackendNotSpecifiedError,
 } from './errors.js';
@@ -209,7 +210,47 @@ describe('WorkspaceContext', () => {
       expect(actualReturnValue).toEqual('🎉');
     });
 
+    it('should throw if the version of the imported module does not match the value in the configuration', async () => {
+      const configuration: PartialConfiguration<BaseConfiguration> & {
+        [k: string]: any;
+      } = {
+        workspace: { name: 'my-workspace' },
+        causa: {
+          // This is obviously not a valid workspace module, but the point is to make the version check fail, which
+          // occurs before the actual import. `js-yaml` is a dependency of this module and a newer version is used.
+          modules: { 'js-yaml': '^3.2.0' },
+        },
+        myFunction: { returnValue: '🎉' },
+      };
+      await writeConfiguration(tmpDir, './causa.yaml', configuration);
+
+      const actualPromise = WorkspaceContext.init({
+        workingDirectory: tmpDir,
+      });
+
+      await expect(actualPromise).rejects.toThrow(ModuleVersionError);
+      await expect(actualPromise).rejects.toMatchObject({
+        message: expect.stringContaining(`Module 'js-yaml' has version`),
+      });
+    });
+
     it('should throw when a module cannot be found', async () => {
+      const configuration: PartialConfiguration<BaseConfiguration> & {
+        [k: string]: any;
+      } = {
+        workspace: { name: 'my-workspace' },
+        causa: { modules: { 'some-non-existing-module': '^1.0.0' } },
+      };
+      await writeConfiguration(tmpDir, './causa.yaml', configuration);
+
+      const actualPromise = WorkspaceContext.init({
+        workingDirectory: tmpDir,
+      });
+
+      await expect(actualPromise).rejects.toThrow(ModuleNotFoundError);
+    });
+
+    it('should throw when a relative module cannot be found', async () => {
       const configuration: PartialConfiguration<BaseConfiguration> & {
         [k: string]: any;
       } = {
