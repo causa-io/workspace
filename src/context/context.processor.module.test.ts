@@ -15,8 +15,21 @@ export class MyProcessor extends WorkspaceFunction<any> {
   }
 }
 
+export class MyOtherProcessor extends WorkspaceFunction<any> {
+  @IsString()
+  readonly value!: string;
+
+  async _call(): Promise<any> {
+    return { myOtherProcessorConf: this.value };
+  }
+
+  _supports(): boolean {
+    return true;
+  }
+}
+
 const registerModule: ModuleRegistrationFunction = async (context) => {
-  context.registerFunctionImplementations(MyProcessor);
+  context.registerFunctionImplementations(MyProcessor, MyOtherProcessor);
 };
 
 export default registerModule;

@@ -1,6 +1,7 @@
 import { mkdtemp, rm } from 'fs/promises';
 import 'jest-extended';
 import { join, resolve } from 'path';
+import { fileURLToPath } from 'url';
 import {
   ConfigurationValueNotFoundError,
   PartialConfiguration,
@@ -8,6 +9,7 @@ import {
 import { InvalidFunctionArgumentError } from '../function-registry/index.js';
 import { BaseConfiguration } from './base-configuration.js';
 import { WorkspaceContext } from './context.js';
+import { MyFunction, MyFunctionImpl } from './context.module.test.js';
 import {
   ContextNotAProjectError,
   EnvironmentNotSetError,
@@ -16,7 +18,6 @@ import {
   SecretBackendNotFoundError,
   SecretBackendNotSpecifiedError,
 } from './errors.js';
-import { MyFunction, MyFunctionImpl } from './module.test.js';
 import { writeConfiguration } from './utils.test.js';
 
 describe('WorkspaceContext', () => {
@@ -118,6 +119,43 @@ describe('WorkspaceContext', () => {
       expect(actualContext.get('myService.myValue')).toEqual('🎉');
       expect(actualContext.logger).toBe(baseContext.logger);
     });
+
+    it('should append processors to the existing ones', async () => {
+      const configuration: PartialConfiguration<BaseConfiguration> & {
+        [k: string]: any;
+      } = {
+        workspace: { name: 'my-workspace' },
+        causa: {
+          modules: [
+            fileURLToPath(
+              new URL('./context.processor.module.test.ts', import.meta.url),
+            ),
+          ],
+        },
+      };
+      await writeConfiguration(tmpDir, './causa.yaml', configuration);
+      const firstProcessor = { name: 'MyProcessor', args: { value: '🔧' } };
+      const secondProcessor = {
+        name: 'MyOtherProcessor',
+        args: { value: '👽' },
+      };
+      const baseContext = await WorkspaceContext.init({
+        workingDirectory: tmpDir,
+        processors: [firstProcessor],
+      });
+
+      const actualContext = await baseContext.clone({
+        processors: [secondProcessor],
+      });
+
+      expect(actualContext.get('myProcessorConf')).toEqual('🔧');
+      expect(actualContext.get('myOtherProcessorConf')).toEqual('👽');
+      expect(baseContext.processors).toEqual([firstProcessor]);
+      expect(actualContext.processors).toEqual([
+        firstProcessor,
+        secondProcessor,
+      ]);
+    });
   });
 
   describe('modules', () => {
@@ -126,7 +164,11 @@ describe('WorkspaceContext', () => {
         [k: string]: any;
       } = {
         workspace: { name: 'my-workspace' },
-        causa: { modules: ['./module.test.ts'] },
+        causa: {
+          modules: [
+            fileURLToPath(new URL('./context.module.test.ts', import.meta.url)),
+          ],
+        },
         myFunction: { returnValue: '🎉' },
       };
       await writeConfiguration(tmpDir, './causa.yaml', configuration);
@@ -162,7 +204,11 @@ describe('WorkspaceContext', () => {
         [k: string]: any;
       } = {
         workspace: { name: 'my-workspace' },
-        causa: { modules: ['./module.test.ts'] },
+        causa: {
+          modules: [
+            fileURLToPath(new URL('./context.module.test.ts', import.meta.url)),
+          ],
+        },
         myFunction: { returnValue: '🎉' },
       };
       await writeConfiguration(tmpDir, './causa.yaml', configuration);
@@ -257,7 +303,11 @@ describe('WorkspaceContext', () => {
       } = {
         workspace: { name: 'my-workspace' },
         causa: {
-          modules: ['./secrets.test.ts'],
+          modules: [
+            fileURLToPath(
+              new URL('./context.secrets.module.test.ts', import.meta.url),
+            ),
+          ],
           secrets: { defaultBackend: 'default' },
         },
         secrets: {
@@ -334,7 +384,13 @@ describe('WorkspaceContext', () => {
         [k: string]: any;
       } = {
         workspace: { name: 'my-workspace' },
-        causa: { modules: ['./secrets.test.ts'] },
+        causa: {
+          modules: [
+            fileURLToPath(
+              new URL('./context.secrets.module.test.ts', import.meta.url),
+            ),
+          ],
+        },
         secrets: { mySecret: { someConf: '🔑' } },
       };
       await writeConfiguration(tmpDir, './causa.yaml', configuration);
@@ -372,16 +428,26 @@ describe('WorkspaceContext', () => {
         [k: string]: any;
       } = {
         workspace: { name: 'my-workspace' },
-        causa: { modules: ['./processor.test.ts'] },
-        processors: [{ name: 'MyProcessor', args: { value: '🔧' } }],
+        causa: {
+          modules: [
+            fileURLToPath(
+              new URL('./context.processor.module.test.ts', import.meta.url),
+            ),
+          ],
+        },
       };
       await writeConfiguration(tmpDir, './causa.yaml', configuration);
+      const expectedProcessors = [
+        { name: 'MyProcessor', args: { value: '🔧' } },
+      ];
 
       const actualContext = await WorkspaceContext.init({
         workingDirectory: tmpDir,
+        processors: expectedProcessors,
       });
 
       expect(actualContext.get('myProcessorConf')).toEqual('🔧');
+      expect(actualContext.processors).toEqual(expectedProcessors);
     });
   });
 });
