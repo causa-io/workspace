@@ -118,6 +118,37 @@ describe('WorkspaceContext', () => {
       expect(actualContext.get('myService.myValue')).toEqual('🎉');
       expect(actualContext.logger).toBe(baseContext.logger);
     });
+
+    it('should append processors to the existing ones', async () => {
+      const configuration: PartialConfiguration<BaseConfiguration> & {
+        [k: string]: any;
+      } = {
+        workspace: { name: 'my-workspace' },
+        causa: { modules: ['./processor.test.ts'] },
+      };
+      await writeConfiguration(tmpDir, './causa.yaml', configuration);
+      const firstProcessor = { name: 'MyProcessor', args: { value: '🔧' } };
+      const secondProcessor = {
+        name: 'MyOtherProcessor',
+        args: { value: '👽' },
+      };
+      const baseContext = await WorkspaceContext.init({
+        workingDirectory: tmpDir,
+        processors: [firstProcessor],
+      });
+
+      const actualContext = await baseContext.clone({
+        processors: [secondProcessor],
+      });
+
+      expect(actualContext.get('myProcessorConf')).toEqual('🔧');
+      expect(actualContext.get('myOtherProcessorConf')).toEqual('👽');
+      expect(baseContext.processors).toEqual([firstProcessor]);
+      expect(actualContext.processors).toEqual([
+        firstProcessor,
+        secondProcessor,
+      ]);
+    });
   });
 
   describe('modules', () => {
@@ -373,15 +404,19 @@ describe('WorkspaceContext', () => {
       } = {
         workspace: { name: 'my-workspace' },
         causa: { modules: ['./processor.test.ts'] },
-        processors: [{ name: 'MyProcessor', args: { value: '🔧' } }],
       };
       await writeConfiguration(tmpDir, './causa.yaml', configuration);
+      const expectedProcessors = [
+        { name: 'MyProcessor', args: { value: '🔧' } },
+      ];
 
       const actualContext = await WorkspaceContext.init({
         workingDirectory: tmpDir,
+        processors: expectedProcessors,
       });
 
       expect(actualContext.get('myProcessorConf')).toEqual('🔧');
+      expect(actualContext.processors).toEqual(expectedProcessors);
     });
   });
 });

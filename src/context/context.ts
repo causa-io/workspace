@@ -29,6 +29,22 @@ import { SecretFetch } from './secrets.js';
 import { WorkspaceServiceConstructor } from './services.js';
 
 /**
+ * A processor ({@link WorkspaceFunction}) to run when initializing the {@link WorkspaceContext}.
+ * The return value of the function will be used to update the configuration.
+ */
+export type ProcessorInstruction = {
+  /**
+   * The name of the {@link WorkspaceFunction}.
+   */
+  name: string;
+
+  /**
+   * Arguments for the workspace function.
+   */
+  args?: Record<string, any>;
+};
+
+/**
  * Options when initializing or cloning a {@link WorkspaceContext}.
  */
 export type WorkspaceContextOptions = {
@@ -43,6 +59,11 @@ export type WorkspaceContextOptions = {
    * The environment that should be set up in the context.
    */
   environment?: string | null;
+
+  /**
+   * A list of {@link ProcessorInstruction}s to run when initializing the context.
+   */
+  processors?: ProcessorInstruction[];
 
   /**
    * The logger to use. Defaults to `pino()`.
@@ -72,6 +93,7 @@ export class WorkspaceContext {
    *   sources.
    * @param functionRegistry The registry keeping a reference of all available implementations of
    *   {@link WorkspaceFunction}s.
+   * @param processors The list of processors that have been run and applied when initializing the context.
    * @param logger The logger that can be used when performing operations within the context.
    */
   private constructor(
@@ -81,6 +103,7 @@ export class WorkspaceContext {
     readonly projectPath: string | null,
     private readonly configuration: WorkspaceConfiguration,
     private readonly functionRegistry: FunctionRegistry<WorkspaceContext>,
+    readonly processors: ProcessorInstruction[],
     readonly logger: Logger,
   ) {
     this.serviceCache = new ServiceCache(this);
@@ -321,6 +344,7 @@ export class WorkspaceContext {
    *
    * @param options Parameters to override when initializing the context.
    *   Options that are not specified will default to the values of the current context.
+   *   Processors are appended to the existing list of processors.
    * @returns The cloned {@link WorkspaceContext}.
    */
   async clone(
@@ -331,6 +355,7 @@ export class WorkspaceContext {
       environment: this.environment,
       logger: this.logger,
       ...options,
+      processors: [...this.processors, ...(options.processors ?? [])],
     });
   }
 
@@ -342,17 +367,16 @@ export class WorkspaceContext {
    * Although this method returns a copy of the {@link WorkspaceContext}, the original context **should no longer be
    * referenced**. To keep a copy of the context, use {@link WorkspaceContext.clone} instead.
    *
-   * @param name The name of the processor to apply.
-   * @param args The arguments when calling the processor.
+   * @param processor The {@link ProcessorInstruction} to run and apply.
    * @returns The {@link WorkspaceContext} with an updated configuration.
    */
   private async withProcessor(
-    name: string,
-    args: Record<string, any>,
+    processor: ProcessorInstruction,
   ): Promise<WorkspaceContext> {
+    const { name, args } = processor;
     this.logger.debug(`🔨 Running processor '${name}'.`);
 
-    const configuration = await this.callByName(name, args);
+    const configuration = await this.callByName(name, args ?? {});
     const processorConfiguration = makeProcessorConfiguration(
       name,
       configuration,
@@ -365,6 +389,7 @@ export class WorkspaceContext {
       this.projectPath,
       this.configuration.mergedWith(processorConfiguration),
       this.functionRegistry,
+      [...this.processors, processor],
       this.logger,
     );
   }
@@ -398,11 +423,12 @@ export class WorkspaceContext {
       projectPath,
       configuration,
       functionRegistry,
+      [],
       logger,
     );
 
-    for (const { name, args } of context.get('processors') ?? []) {
-      context = await context.withProcessor(name, args ?? {});
+    for (const processor of options.processors ?? []) {
+      context = await context.withProcessor(processor);
     }
 
     logger.debug(`🎉 Successfully initialized context.`);

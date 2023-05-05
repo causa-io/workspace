@@ -102,19 +102,4 @@ export type BaseConfiguration = {
       configuration?: Record<string, any>;
     }
   >;
-
-  /**
-   * A list of processors to run before any operation.
-   */
-  processors?: {
-    /**
-     * The name of the processor to run.
-     */
-    name: string;
-
-    /**
-     * Arguments to pass to the processor.
-     */
-    args?: Record<string, any>;
-  }[];
 };
