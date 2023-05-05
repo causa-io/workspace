@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+Fixes:
+
+- Export `ProcessorInstruction`.
+
 ## v0.2.0 (2023-05-05)
 
 Breaking changes:
