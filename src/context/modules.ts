@@ -1,4 +1,5 @@
 import { ClassConstructor } from 'class-transformer';
+import { resolve } from 'path';
 import { Logger } from 'pino';
 import { FunctionRegistry } from '../function-registry/index.js';
 import { WorkspaceConfiguration } from './configuration.js';
@@ -34,21 +35,26 @@ export type ModuleRegistrationFunction = (
  *
  * @param moduleName The name of the JavaScript module, as it would be loaded from JavaScript code.
  * @param moduleVersion The expected version for the module, as a `semver` string.
+ * @param basePath The base path used to resolve relative module paths.
  * @param functionRegistry The {@link FunctionRegistry} to which functions should be registered.
  * @param logger The logger to use.
  */
 async function loadModule(
   moduleName: string,
   moduleVersion: string,
+  basePath: string,
   functionRegistry: FunctionRegistry<WorkspaceContext>,
   logger: Logger,
 ): Promise<void> {
   try {
-    logger.debug(`🔨 Loading module '${moduleName}'.`);
-    const registerModule = (await import(moduleName))
+    const isPath = /^[\.]{0,2}\/.*$/.test(moduleName);
+    const importName = isPath ? resolve(basePath, moduleName) : moduleName;
+
+    logger.debug(`🔨 Loading module '${importName}'.`);
+    const registerModule = (await import(importName))
       .default as ModuleRegistrationFunction;
 
-    logger.debug(`🔨 Registering module '${moduleName}'.`);
+    logger.debug(`🔨 Registering module '${importName}'.`);
     await registerModule({
       registerFunctionImplementations: (...implementations) =>
         functionRegistry.registerImplementations(...implementations),
@@ -65,11 +71,13 @@ async function loadModule(
 /**
  * Loads the core module, as well as all the modules listed in the workspace configuration.
  *
+ * @param rootPath The root of the workspace, from which relative module paths will be resolved.
  * @param configuration The {@link WorkspaceConfiguration} from which the list modules be read.
  * @param functionRegistry The {@link FunctionRegistry} to which functions should be registered.
  * @param logger The logger to use.
  */
 export async function loadModules(
+  rootPath: string,
   configuration: WorkspaceConfiguration,
   functionRegistry: FunctionRegistry<WorkspaceContext>,
   logger: Logger,
@@ -87,7 +95,7 @@ export async function loadModules(
 
   await Promise.all(
     modulesAndVersions.map(([moduleName, moduleVersion]) =>
-      loadModule(moduleName, moduleVersion, functionRegistry, logger),
+      loadModule(moduleName, moduleVersion, rootPath, functionRegistry, logger),
     ),
   );
 }

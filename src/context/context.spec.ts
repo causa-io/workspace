@@ -1,6 +1,6 @@
 import { mkdtemp, rm } from 'fs/promises';
 import 'jest-extended';
-import { join, resolve } from 'path';
+import { join, relative, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import {
   ConfigurationValueNotFoundError,
@@ -169,6 +169,32 @@ describe('WorkspaceContext', () => {
             [fileURLToPath(
               new URL('./context.module.test.ts', import.meta.url),
             )]: '',
+          },
+        },
+        myFunction: { returnValue: '🎉' },
+      };
+      await writeConfiguration(tmpDir, './causa.yaml', configuration);
+
+      const context = await WorkspaceContext.init({
+        workingDirectory: tmpDir,
+      });
+
+      const actualReturnValue = await context.callByName('MyFunction', {});
+      expect(actualReturnValue).toEqual('🎉');
+    });
+
+    it('should load the module using a relative path', async () => {
+      const absolutePath = fileURLToPath(
+        new URL('./context.module.test.ts', import.meta.url),
+      );
+      const relativePath = relative(tmpDir, absolutePath);
+      const configuration: PartialConfiguration<BaseConfiguration> & {
+        [k: string]: any;
+      } = {
+        workspace: { name: 'my-workspace' },
+        causa: {
+          modules: {
+            [relativePath]: '',
           },
         },
         myFunction: { returnValue: '🎉' },
