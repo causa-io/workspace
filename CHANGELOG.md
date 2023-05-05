@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.2.1 (2023-05-05)
+
 Fixes:
 
 - Export `ProcessorInstruction`.
