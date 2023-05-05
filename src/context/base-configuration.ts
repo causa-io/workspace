@@ -52,9 +52,11 @@ export type BaseConfiguration = {
    */
   causa?: {
     /**
-     * The list of modules to load when the CLI runs.
+     * The modules to load when the CLI runs.
+     * Keys are the names of the modules (npm packages) and values are `semver` versions.
+     * Local paths are also accepted. Relative paths will be resolved from the workspace root.
      */
-    modules?: string[];
+    modules?: Record<string, string>;
 
     /**
      * Generic configuration for secrets.

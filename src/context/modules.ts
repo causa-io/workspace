@@ -33,11 +33,13 @@ export type ModuleRegistrationFunction = (
  * Loads a module in the context, making new functions, secret backends, etc available.
  *
  * @param moduleName The name of the JavaScript module, as it would be loaded from JavaScript code.
+ * @param moduleVersion The expected version for the module, as a `semver` string.
  * @param functionRegistry The {@link FunctionRegistry} to which functions should be registered.
  * @param logger The logger to use.
  */
 async function loadModule(
   moduleName: string,
+  moduleVersion: string,
   functionRegistry: FunctionRegistry<WorkspaceContext>,
   logger: Logger,
 ): Promise<void> {
@@ -72,18 +74,20 @@ export async function loadModules(
   functionRegistry: FunctionRegistry<WorkspaceContext>,
   logger: Logger,
 ): Promise<void> {
-  const moduleNames = configuration.get('causa.modules') ?? [];
-  if (moduleNames.length > 0) {
+  const modulesAndVersions = Object.entries(
+    configuration.get('causa.modules') ?? {},
+  );
+  if (modulesAndVersions.length > 0) {
     logger.debug(
-      `🔨 Found the following modules to load in the configuration: ${moduleNames
-        .map((m) => `'${m}'`)
+      `🔨 Found the following modules to load in the configuration: ${modulesAndVersions
+        .map((m) => `'${m[0]}'`)
         .join(', ')}.`,
     );
   }
 
   await Promise.all(
-    moduleNames.map((moduleName) =>
-      loadModule(moduleName, functionRegistry, logger),
+    modulesAndVersions.map(([moduleName, moduleVersion]) =>
+      loadModule(moduleName, moduleVersion, functionRegistry, logger),
     ),
   );
 }

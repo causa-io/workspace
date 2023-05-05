@@ -126,11 +126,11 @@ describe('WorkspaceContext', () => {
       } = {
         workspace: { name: 'my-workspace' },
         causa: {
-          modules: [
-            fileURLToPath(
+          modules: {
+            [fileURLToPath(
               new URL('./context.processor.module.test.ts', import.meta.url),
-            ),
-          ],
+            )]: '',
+          },
         },
       };
       await writeConfiguration(tmpDir, './causa.yaml', configuration);
@@ -165,9 +165,11 @@ describe('WorkspaceContext', () => {
       } = {
         workspace: { name: 'my-workspace' },
         causa: {
-          modules: [
-            fileURLToPath(new URL('./context.module.test.ts', import.meta.url)),
-          ],
+          modules: {
+            [fileURLToPath(
+              new URL('./context.module.test.ts', import.meta.url),
+            )]: '',
+          },
         },
         myFunction: { returnValue: '🎉' },
       };
@@ -186,7 +188,7 @@ describe('WorkspaceContext', () => {
         [k: string]: any;
       } = {
         workspace: { name: 'my-workspace' },
-        causa: { modules: ['./❓.ts'] },
+        causa: { modules: { './❓.ts': '' } },
       };
       await writeConfiguration(tmpDir, './causa.yaml', configuration);
 
@@ -205,9 +207,11 @@ describe('WorkspaceContext', () => {
       } = {
         workspace: { name: 'my-workspace' },
         causa: {
-          modules: [
-            fileURLToPath(new URL('./context.module.test.ts', import.meta.url)),
-          ],
+          modules: {
+            [fileURLToPath(
+              new URL('./context.module.test.ts', import.meta.url),
+            )]: '',
+          },
         },
         myFunction: { returnValue: '🎉' },
       };
@@ -303,11 +307,11 @@ describe('WorkspaceContext', () => {
       } = {
         workspace: { name: 'my-workspace' },
         causa: {
-          modules: [
-            fileURLToPath(
+          modules: {
+            [fileURLToPath(
               new URL('./context.secrets.module.test.ts', import.meta.url),
-            ),
-          ],
+            )]: '',
+          },
           secrets: { defaultBackend: 'default' },
         },
         secrets: {
@@ -385,11 +389,11 @@ describe('WorkspaceContext', () => {
       } = {
         workspace: { name: 'my-workspace' },
         causa: {
-          modules: [
-            fileURLToPath(
+          modules: {
+            [fileURLToPath(
               new URL('./context.secrets.module.test.ts', import.meta.url),
-            ),
-          ],
+            )]: '',
+          },
         },
         secrets: { mySecret: { someConf: '🔑' } },
       };
@@ -429,11 +433,11 @@ describe('WorkspaceContext', () => {
       } = {
         workspace: { name: 'my-workspace' },
         causa: {
-          modules: [
-            fileURLToPath(
+          modules: {
+            [fileURLToPath(
               new URL('./context.processor.module.test.ts', import.meta.url),
-            ),
-          ],
+            )]: '',
+          },
         },
       };
       await writeConfiguration(tmpDir, './causa.yaml', configuration);
