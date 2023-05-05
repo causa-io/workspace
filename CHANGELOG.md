@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.2.0 (2023-05-05)
+
 Breaking changes:
 
 - Processors are no longer loaded from the configuration by default. Instead, they should be passed to `WorkspaceContext.init()` or `WorkspaceContext.clone()`.
