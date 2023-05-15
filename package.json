@@ -15,6 +15,7 @@
     "./configuration": "./dist/configuration/index.js",
     "./function-registry": "./dist/function-registry/index.js",
     "./service-cache": "./dist/service-cache/index.js",
+    "./testing": "./dist/testing/index.js",
     "./validation": "./dist/validation/index.js"
   },
   "files": [
