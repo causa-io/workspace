@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.3.0 (2023-05-15)
+
 Breaking changes:
 
 - Function implementations (class constructors) must conform to the `ImplementableFunctionImplementationConstructor` type rather than `ClassConstructor` from the `class-transformer` package.
