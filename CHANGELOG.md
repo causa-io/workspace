@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.4.0 (2023-05-15)
+
 Features:
 
 - Implement the `listFilesAndFormat` file utility.
