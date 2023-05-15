@@ -36,6 +36,7 @@
     "@types/lodash": "^4.14.194",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
+    "globby": "^13.1.4",
     "js-yaml": "^4.1.0",
     "lodash-es": "^4.17.21",
     "pino": "^8.14.1",

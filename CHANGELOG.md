@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+Features:
+
+- Implement the `listFilesAndFormat` file utility.
+
 Fixes:
 
 - Depend on `lodash` types to correctly export `GetFieldType`.
