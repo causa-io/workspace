@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+Fixes:
+
+- Depend on `lodash` types to correctly export `GetFieldType`.
+
 ## v0.3.0 (2023-05-15)
 
 Breaking changes:
