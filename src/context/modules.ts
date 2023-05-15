@@ -1,10 +1,12 @@
-import { ClassConstructor } from 'class-transformer';
 import { readFile } from 'fs/promises';
 import { resolve } from 'path';
 import { Logger } from 'pino';
 import resolvePackagePath from 'resolve-package-path';
 import { satisfies } from 'semver';
-import { FunctionRegistry } from '../function-registry/index.js';
+import {
+  FunctionRegistry,
+  ImplementableFunctionImplementationConstructor,
+} from '../function-registry/index.js';
 import { WorkspaceConfiguration } from './configuration.js';
 import { WorkspaceContext } from './context.js';
 import { ModuleNotFoundError, ModuleVersionError } from './errors.js';
@@ -21,7 +23,9 @@ export type ModuleRegistrationContext = {
    * @param implementations The constructors for the workspace function classes to register.
    */
   registerFunctionImplementations(
-    ...implementations: ClassConstructor<WorkspaceFunction<any>>[]
+    ...implementations: ImplementableFunctionImplementationConstructor<
+      WorkspaceFunction<any>
+    >[]
   ): void;
 };
 

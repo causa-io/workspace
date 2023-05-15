@@ -1,9 +1,10 @@
-import { ClassConstructor, plainToInstance } from 'class-transformer';
+import { plainToInstance } from 'class-transformer';
 import { ValidationError, parseObject } from '../validation/index.js';
 import {
   ImplementableFunction,
   ImplementableFunctionArguments,
   ImplementableFunctionDefinitionConstructor,
+  ImplementableFunctionImplementationConstructor,
   ImplementableFunctionReturnType,
 } from './definition.js';
 import {
@@ -29,7 +30,7 @@ type RegisteredFunction<
   /**
    * The list of constructors of concrete types inheriting from the definition.
    */
-  implementations: ClassConstructor<D>[];
+  implementations: ImplementableFunctionImplementationConstructor<D>[];
 };
 
 /**
@@ -85,7 +86,7 @@ export class FunctionRegistry<C extends object> {
    */
   register<D extends ImplementableFunction<C, any>, I extends D>(
     definition: ImplementableFunctionDefinitionConstructor<D>,
-    implementation: ClassConstructor<I>,
+    implementation: ImplementableFunctionImplementationConstructor<I>,
   ) {
     this.getMatchingRegisteredFunction(definition, {
       create: true,
@@ -99,7 +100,9 @@ export class FunctionRegistry<C extends object> {
    * @param implementations The list of implementations to register.
    */
   registerImplementations(
-    ...implementations: ClassConstructor<ImplementableFunction<C, any>>[]
+    ...implementations: ImplementableFunctionImplementationConstructor<
+      ImplementableFunction<C, any>
+    >[]
   ) {
     implementations.forEach((implementation) =>
       this.register(
@@ -120,7 +123,7 @@ export class FunctionRegistry<C extends object> {
    * @returns The class constructor of the definition class.
    */
   getDefinitionForImplementation<D extends ImplementableFunction<C, any>>(
-    implementation: ClassConstructor<D>,
+    implementation: ImplementableFunctionImplementationConstructor<D>,
   ): ImplementableFunctionDefinitionConstructor<D> {
     const parentClass = Object.getPrototypeOf(implementation);
     if (parentClass === this.baseDefinitionClass) {

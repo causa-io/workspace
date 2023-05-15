@@ -1,9 +1,16 @@
 /**
  * The constructor of an abstract class representing an {@link ImplementableFunction}.
  */
-export declare type ImplementableFunctionDefinitionConstructor<
+export type ImplementableFunctionDefinitionConstructor<
   T extends ImplementableFunction<any, any>,
 > = abstract new () => T;
+
+/**
+ * The constructor of a concrete class implementing an {@link ImplementableFunction}.
+ */
+export type ImplementableFunctionImplementationConstructor<
+  T extends ImplementableFunction<any, any>,
+> = new () => T;
 
 /**
  * The base class for all function definitions.
