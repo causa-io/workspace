@@ -1,8 +1,9 @@
 import { readFile } from 'fs/promises';
-import { resolve } from 'path';
+import { dirname, resolve } from 'path';
 import { Logger } from 'pino';
 import resolvePackagePath from 'resolve-package-path';
 import { satisfies } from 'semver';
+import { fileURLToPath } from 'url';
 import {
   FunctionRegistry,
   ImplementableFunctionImplementationConstructor,
@@ -43,13 +44,12 @@ export type ModuleRegistrationFunction = (
  *
  * @param moduleName The name of the module that will be imported.
  * @param moduleVersion The expected `semver` for the module's version.
- * @param basePath The base path to use to resolve modules.
  */
 async function checkModuleVersion(
   moduleName: string,
   moduleVersion: string,
-  basePath: string,
 ): Promise<void> {
+  const basePath = dirname(fileURLToPath(import.meta.url));
   const packagePath = resolvePackagePath(moduleName, basePath);
   if (!packagePath) {
     throw new ModuleNotFoundError(moduleName);
@@ -109,7 +109,7 @@ async function loadModule(
     logger.debug(`🔨 Loading module '${importName}'.`);
 
     if (!isPath) {
-      await checkModuleVersion(moduleName, moduleVersion, basePath);
+      await checkModuleVersion(moduleName, moduleVersion);
     }
 
     const registerModule = (await import(importName))
