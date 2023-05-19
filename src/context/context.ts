@@ -26,7 +26,7 @@ import {
 } from './errors.js';
 import { WorkspaceFunction } from './functions.js';
 import { loadModules } from './modules.js';
-import { ProcessorInstruction, ProcessorOutput } from './processor.js';
+import { ProcessorInstruction, ProcessorResult } from './processor.js';
 import { SecretFetch } from './secrets.js';
 import { WorkspaceServiceConstructor } from './services.js';
 
@@ -362,7 +362,7 @@ export class WorkspaceContext {
     const { name, args } = processor;
     this.logger.debug(`🔨 Running processor '${name}'.`);
 
-    const output: ProcessorOutput = await this.callByName(name, args ?? {});
+    const output: ProcessorResult = await this.callByName(name, args ?? {});
     if (!(output.configuration instanceof Object)) {
       throw new InvalidProcessorOutputError(name);
     }

@@ -19,7 +19,7 @@ export type ProcessorInstruction = {
 /**
  * The return value of a {@link ProcessorFunction}.
  */
-export type ProcessorOutput = {
+export type ProcessorResult = {
   /**
    * A partial configuration that will be merged into the workspace configuration.
    */
@@ -31,4 +31,4 @@ export type ProcessorOutput = {
  * Its return value should contain a configuration object that will be merged into the workspace configuration.
  */
 export interface ProcessorFunction
-  extends WorkspaceFunction<Promise<ProcessorOutput>> {}
+  extends WorkspaceFunction<Promise<ProcessorResult>> {}

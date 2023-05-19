@@ -6,6 +6,10 @@ Fixes:
 
 - Use the correct base path when resolving package paths. This would cause module import to fail.
 
+Breaking changes:
+
+- Rename `ProcessorOutput` to `ProcessorResult` for consistency with existing functions.
+
 ## v0.5.0 (2023-05-19)
 
 Breaking changes:
