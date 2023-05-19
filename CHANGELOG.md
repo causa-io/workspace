@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.6.0 (2023-05-19)
+
 Fixes:
 
 - Use the correct base path when resolving package paths. This would cause module import to fail.
