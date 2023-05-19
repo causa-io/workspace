@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+Fixes:
+
+- Use the correct base path when resolving package paths. This would cause module import to fail.
+
 ## v0.5.0 (2023-05-19)
 
 Breaking changes:
