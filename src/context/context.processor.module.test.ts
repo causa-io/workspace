@@ -1,7 +1,7 @@
 import { IsString } from 'class-validator';
 import { WorkspaceFunction } from './functions.js';
 import { ModuleRegistrationFunction } from './modules.js';
-import { ProcessorFunction, ProcessorOutput } from './processor.js';
+import { ProcessorFunction, ProcessorResult } from './processor.js';
 
 export class MyProcessor
   extends WorkspaceFunction<
@@ -28,7 +28,7 @@ export class MyProcessor
 }
 
 export class MyOtherProcessor
-  extends WorkspaceFunction<Promise<ProcessorOutput>>
+  extends WorkspaceFunction<Promise<ProcessorResult>>
   implements ProcessorFunction
 {
   @IsString()
