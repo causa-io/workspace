@@ -19,30 +19,16 @@ import {
 import {
   ContextNotAProjectError,
   EnvironmentNotSetError,
+  InvalidProcessorOutputError,
   InvalidSecretDefinitionError,
   SecretBackendNotFoundError,
   SecretBackendNotSpecifiedError,
 } from './errors.js';
 import { WorkspaceFunction } from './functions.js';
 import { loadModules } from './modules.js';
+import { ProcessorInstruction, ProcessorOutput } from './processor.js';
 import { SecretFetch } from './secrets.js';
 import { WorkspaceServiceConstructor } from './services.js';
-
-/**
- * A processor ({@link WorkspaceFunction}) to run when initializing the {@link WorkspaceContext}.
- * The return value of the function will be used to update the configuration.
- */
-export type ProcessorInstruction = {
-  /**
-   * The name of the {@link WorkspaceFunction}.
-   */
-  name: string;
-
-  /**
-   * Arguments for the workspace function.
-   */
-  args?: Record<string, any>;
-};
 
 /**
  * Options when initializing or cloning a {@link WorkspaceContext}.
@@ -376,10 +362,14 @@ export class WorkspaceContext {
     const { name, args } = processor;
     this.logger.debug(`🔨 Running processor '${name}'.`);
 
-    const configuration = await this.callByName(name, args ?? {});
+    const output: ProcessorOutput = await this.callByName(name, args ?? {});
+    if (!(output.configuration instanceof Object)) {
+      throw new InvalidProcessorOutputError(name);
+    }
+
     const processorConfiguration = makeProcessorConfiguration(
       name,
-      configuration,
+      output.configuration,
     );
 
     return new WorkspaceContext(

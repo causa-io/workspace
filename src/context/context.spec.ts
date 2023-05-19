@@ -13,6 +13,7 @@ import { MyFunction, MyFunctionImpl } from './context.module.test.js';
 import {
   ContextNotAProjectError,
   EnvironmentNotSetError,
+  InvalidProcessorOutputError,
   InvalidSecretDefinitionError,
   ModuleNotFoundError,
   ModuleVersionError,
@@ -519,6 +520,28 @@ describe('WorkspaceContext', () => {
 
       expect(actualContext.get('myProcessorConf')).toEqual('🔧');
       expect(actualContext.processors).toEqual(expectedProcessors);
+    });
+
+    it('should throw if the configuration returned by the processor is invalid', async () => {
+      const configuration: PartialConfiguration<BaseConfiguration> = {
+        workspace: { name: 'my-workspace' },
+        causa: {
+          modules: {
+            [fileURLToPath(
+              new URL('./context.processor.module.test.ts', import.meta.url),
+            )]: '',
+          },
+        },
+      };
+      await writeConfiguration(tmpDir, './causa.yaml', configuration);
+      const expectedProcessors = [{ name: 'MyInvalidProcessor' }];
+
+      const actualPromise = WorkspaceContext.init({
+        workingDirectory: tmpDir,
+        processors: expectedProcessors,
+      });
+
+      await expect(actualPromise).rejects.toThrow(InvalidProcessorOutputError);
     });
   });
 });
