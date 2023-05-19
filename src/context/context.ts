@@ -19,6 +19,7 @@ import {
 import {
   ContextNotAProjectError,
   EnvironmentNotSetError,
+  InvalidProcessorOutputError,
   InvalidSecretDefinitionError,
   SecretBackendNotFoundError,
   SecretBackendNotSpecifiedError,
@@ -362,6 +363,10 @@ export class WorkspaceContext {
     this.logger.debug(`🔨 Running processor '${name}'.`);
 
     const output: ProcessorOutput = await this.callByName(name, args ?? {});
+    if (!(output.configuration instanceof Object)) {
+      throw new InvalidProcessorOutputError(name);
+    }
+
     const processorConfiguration = makeProcessorConfiguration(
       name,
       output.configuration,

@@ -54,6 +54,17 @@ export class ModuleVersionError extends WorkspaceContextError {
 }
 
 /**
+ * An error thrown when a processor return value does not contain a valid configuration.
+ */
+export class InvalidProcessorOutputError extends WorkspaceContextError {
+  constructor(readonly processor: string) {
+    super(
+      `The processor '${processor}' returned an invalid output, expected a configuration.`,
+    );
+  }
+}
+
+/**
  * The base class for secret-related errors.
  */
 export class SecretError extends Error {}

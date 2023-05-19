@@ -43,8 +43,22 @@ export class MyOtherProcessor
   }
 }
 
+export class MyInvalidProcessor extends WorkspaceFunction<any> {
+  async _call() {
+    return { nope: '😢' };
+  }
+
+  _supports(): boolean {
+    return true;
+  }
+}
+
 const registerModule: ModuleRegistrationFunction = async (context) => {
-  context.registerFunctionImplementations(MyProcessor, MyOtherProcessor);
+  context.registerFunctionImplementations(
+    MyProcessor,
+    MyOtherProcessor,
+    MyInvalidProcessor,
+  );
 };
 
 export default registerModule;
