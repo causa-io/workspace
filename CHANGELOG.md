@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+Breaking changes:
+
+- Processors should return an object containing a `configuration` property, rather than the configuration directly. The `ProcessorFunction` can be implemented to ensure a workspace function is a valid processor.
+
 ## v0.4.0 (2023-05-15)
 
 Features:
