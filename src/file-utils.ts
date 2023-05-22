@@ -65,3 +65,15 @@ export async function listFilesAndFormat(
     return { rendered, formatParts, filePath };
   });
 }
+
+/**
+ * Checks if the given module is a local path (absolute or relative).
+ * This simply checks if the module starts with `.` or `/`, which are not valid characters for a module name, and might
+ * indicate that the module is a local path.
+ *
+ * @param module The name of the module to import.
+ * @returns `true` if the module is a local path, `false` otherwise.
+ */
+export function isModuleLocalPath(module: string): boolean {
+  return module.startsWith('.') || module.startsWith('/');
+}
