@@ -4,6 +4,7 @@ import { Logger } from 'pino';
 import resolvePackagePath from 'resolve-package-path';
 import { satisfies } from 'semver';
 import { fileURLToPath } from 'url';
+import { isModuleLocalPath } from '../file-utils.js';
 import {
   FunctionRegistry,
   ImplementableFunctionImplementationConstructor,
@@ -88,6 +89,9 @@ async function checkModuleVersion(
 
 /**
  * Loads a module in the context, making new functions, secret backends, etc available.
+ * If the module has a valid npm package name, its version is checked against `moduleVersion`.
+ * Absolute and relative paths are also supported, and are not checked for a version.
+ * (A path is detected using {@link isModuleLocalPath}.)
  *
  * @param moduleName The name of the JavaScript module, as it would be loaded from JavaScript code.
  * @param moduleVersion The expected version for the module, as a `semver` string.
@@ -103,7 +107,7 @@ async function loadModule(
   logger: Logger,
 ): Promise<void> {
   try {
-    const isPath = /^[\.]{0,2}\/.*$/.test(moduleName);
+    const isPath = isModuleLocalPath(moduleName);
     const importName = isPath ? resolve(basePath, moduleName) : moduleName;
 
     logger.debug(`🔨 Loading module '${importName}'.`);
