@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+Features:
+
+- Expose the `loadWorkspaceConfiguration` function, to load a configuration without creating a context.
+- Implement the `isModuleLocalPath` utility, exposing how the module loading logic makes the difference with valid npm package names.
+
 ## v0.6.0 (2023-05-19)
 
 Fixes:
