@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.7.0 (2023-05-22)
+
 Features:
 
 - Expose the `loadWorkspaceConfiguration` function, to load a configuration without creating a context.
