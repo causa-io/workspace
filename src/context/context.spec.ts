@@ -1,7 +1,7 @@
 import { mkdtemp, rm } from 'fs/promises';
 import 'jest-extended';
 import { tmpdir } from 'os';
-import { join, relative, resolve } from 'path';
+import { join, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import {
   ConfigurationValueNotFoundError,
@@ -134,7 +134,7 @@ describe('WorkspaceContext', () => {
           modules: {
             [fileURLToPath(
               new URL('./context.processor.module.test.ts', import.meta.url),
-            )]: '',
+            )]: 'file:/path',
           },
         },
       };
@@ -165,6 +165,8 @@ describe('WorkspaceContext', () => {
 
   describe('modules', () => {
     it('should load the module', async () => {
+      // This ensures the rest of module loading works. However providing a path as the package name is not officially
+      // supported. A version containing a local path should be used instead.
       const configuration: PartialConfiguration<BaseConfiguration> & {
         [k: string]: any;
       } = {
@@ -173,7 +175,7 @@ describe('WorkspaceContext', () => {
           modules: {
             [fileURLToPath(
               new URL('./context.module.test.ts', import.meta.url),
-            )]: '',
+            )]: 'file:/path',
           },
         },
         myFunction: { returnValue: '🎉' },
@@ -188,30 +190,27 @@ describe('WorkspaceContext', () => {
       expect(actualReturnValue).toEqual('🎉');
     });
 
-    it('should load the module using a relative path', async () => {
-      const absolutePath = fileURLToPath(
-        new URL('./context.module.test.ts', import.meta.url),
-      );
-      const relativePath = relative(tmpDir, absolutePath);
+    it('should not perform the version check for a local path', async () => {
       const configuration: PartialConfiguration<BaseConfiguration> & {
         [k: string]: any;
       } = {
         workspace: { name: 'my-workspace' },
         causa: {
           modules: {
-            [relativePath]: '',
+            'js-yaml': 'file:/some/path',
           },
         },
         myFunction: { returnValue: '🎉' },
       };
       await writeConfiguration(tmpDir, './causa.yaml', configuration);
 
-      const context = await WorkspaceContext.init({
+      const actualPromise = WorkspaceContext.init({
         workingDirectory: tmpDir,
       });
 
-      const actualReturnValue = await context.callByName('MyFunction', {});
-      expect(actualReturnValue).toEqual('🎉');
+      // This should not be a `ModuleVersionError`. It should be a `TypeError` because `js-yaml` could be loaded but is
+      // not a valid Causa module.
+      await expect(actualPromise).rejects.toThrow(TypeError);
     });
 
     it('should throw if the version of the imported module does not match the value in the configuration', async () => {
@@ -255,22 +254,6 @@ describe('WorkspaceContext', () => {
 
       await expect(actualPromise).rejects.toThrow(ModuleNotFoundError);
     });
-
-    it('should throw when a relative module cannot be found', async () => {
-      const configuration: PartialConfiguration<BaseConfiguration> & {
-        [k: string]: any;
-      } = {
-        workspace: { name: 'my-workspace' },
-        causa: { modules: { './❓.ts': '' } },
-      };
-      await writeConfiguration(tmpDir, './causa.yaml', configuration);
-
-      const actualPromise = WorkspaceContext.init({
-        workingDirectory: tmpDir,
-      });
-
-      await expect(actualPromise).rejects.toThrow(ModuleNotFoundError);
-    });
   });
 
   describe('functions', () => {
@@ -283,7 +266,7 @@ describe('WorkspaceContext', () => {
           modules: {
             [fileURLToPath(
               new URL('./context.module.test.ts', import.meta.url),
-            )]: '',
+            )]: 'file:/path',
           },
         },
         myFunction: { returnValue: '🎉' },
@@ -383,7 +366,7 @@ describe('WorkspaceContext', () => {
           modules: {
             [fileURLToPath(
               new URL('./context.secrets.module.test.ts', import.meta.url),
-            )]: '',
+            )]: 'file:/path',
           },
           secrets: { defaultBackend: 'default' },
         },
@@ -465,7 +448,7 @@ describe('WorkspaceContext', () => {
           modules: {
             [fileURLToPath(
               new URL('./context.secrets.module.test.ts', import.meta.url),
-            )]: '',
+            )]: 'file:/path',
           },
         },
         secrets: { mySecret: { someConf: '🔑' } },
@@ -509,7 +492,7 @@ describe('WorkspaceContext', () => {
           modules: {
             [fileURLToPath(
               new URL('./context.processor.module.test.ts', import.meta.url),
-            )]: '',
+            )]: 'file:/path',
           },
         },
       };
@@ -534,7 +517,7 @@ describe('WorkspaceContext', () => {
           modules: {
             [fileURLToPath(
               new URL('./context.processor.module.test.ts', import.meta.url),
-            )]: '',
+            )]: 'file:/path',
           },
         },
       };
