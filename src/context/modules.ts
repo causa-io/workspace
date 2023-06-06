@@ -10,7 +10,11 @@ import {
 } from '../function-registry/index.js';
 import { WorkspaceConfiguration } from './configuration.js';
 import { WorkspaceContext } from './context.js';
-import { ModuleNotFoundError, ModuleVersionError } from './errors.js';
+import {
+  IncompatibleModuleVersionError,
+  ModuleNotFoundError,
+  ModuleVersionError,
+} from './errors.js';
 import { WorkspaceFunction } from './functions.js';
 
 /**
@@ -78,10 +82,10 @@ async function checkModuleVersion(
   }
 
   if (!satisfies(version, moduleVersion)) {
-    throw new ModuleVersionError(
+    throw new IncompatibleModuleVersionError(
       moduleName,
+      version,
       moduleVersion,
-      `Module '${moduleName}' has version '${version}' which does not match the configuration requirement '${moduleVersion}'.`,
     );
   }
 }

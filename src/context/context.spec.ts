@@ -14,10 +14,10 @@ import { MyFunction, MyFunctionImpl } from './context.module.test.js';
 import {
   ContextNotAProjectError,
   EnvironmentNotSetError,
+  IncompatibleModuleVersionError,
   InvalidProcessorOutputError,
   InvalidSecretDefinitionError,
   ModuleNotFoundError,
-  ModuleVersionError,
   SecretBackendNotFoundError,
   SecretBackendNotSpecifiedError,
 } from './errors.js';
@@ -233,9 +233,11 @@ describe('WorkspaceContext', () => {
         workingDirectory: tmpDir,
       });
 
-      await expect(actualPromise).rejects.toThrow(ModuleVersionError);
+      await expect(actualPromise).rejects.toThrow(
+        IncompatibleModuleVersionError,
+      );
       await expect(actualPromise).rejects.toMatchObject({
-        message: expect.stringContaining(`Module 'js-yaml' has version`),
+        isIncompatibleModuleVersionError: true,
       });
     });
 
