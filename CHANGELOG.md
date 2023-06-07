@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.8.0 (2023-06-07)
+
 Breaking changes:
 
 - Remove the `isModuleLocalPath` utility.
