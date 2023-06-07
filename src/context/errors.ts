@@ -31,22 +31,12 @@ export class EnvironmentNotSetError extends WorkspaceContextError {
 export class InvalidWorkspaceConfigurationFilesError extends WorkspaceContextError {}
 
 /**
- * An error thrown when the module to load cannot be found.
+ * An error thrown when a module cannot be loaded.
  */
-export class ModuleNotFoundError extends WorkspaceContextError {
-  constructor(readonly moduleName: string) {
-    super(`The module to load '${moduleName}' could not be found.`);
-  }
-}
-
-/**
- * An error thrown when the version of the module to load cannot be fetched, or when the version does not match the
- * requirement from the configuration.
- */
-export class ModuleVersionError extends WorkspaceContextError {
+export class ModuleLoadingError extends WorkspaceContextError {
   constructor(
     readonly moduleName: string,
-    readonly moduleVersion: string,
+    readonly requiresModuleInstall: boolean,
     message: string,
   ) {
     super(message);
@@ -54,24 +44,30 @@ export class ModuleVersionError extends WorkspaceContextError {
 }
 
 /**
+ * An error thrown when the module to load cannot be found.
+ */
+export class ModuleNotFoundError extends ModuleLoadingError {
+  constructor(readonly moduleName: string) {
+    super(
+      moduleName,
+      true,
+      `The module to load '${moduleName}' could not be found.`,
+    );
+  }
+}
+
+/**
  * An error thrown when the version of the module to load does not match the requirement from the configuration.
  */
-export class IncompatibleModuleVersionError extends ModuleVersionError {
-  /**
-   * A flag indicating that this error is an {@link IncompatibleModuleVersionError}.
-   * Useful when catching this error after having created a workspace context in a worker thread, with possibly a
-   * different version of the `@causa/workspace` package.
-   */
-  readonly isIncompatibleModuleVersionError = true;
-
+export class IncompatibleModuleVersionError extends ModuleLoadingError {
   constructor(
-    readonly moduleName: string,
+    moduleName: string,
     readonly moduleVersion: string,
     readonly requiredVersion: string,
   ) {
     super(
       moduleName,
-      moduleVersion,
+      true,
       `Module '${moduleName}' has version '${moduleVersion}' which does not match the configuration requirement '${requiredVersion}'.`,
     );
   }

@@ -237,7 +237,7 @@ describe('WorkspaceContext', () => {
         IncompatibleModuleVersionError,
       );
       await expect(actualPromise).rejects.toMatchObject({
-        isIncompatibleModuleVersionError: true,
+        requiresModuleInstall: true,
       });
     });
 
@@ -255,6 +255,9 @@ describe('WorkspaceContext', () => {
       });
 
       await expect(actualPromise).rejects.toThrow(ModuleNotFoundError);
+      await expect(actualPromise).rejects.toMatchObject({
+        requiresModuleInstall: true,
+      });
     });
   });
 
