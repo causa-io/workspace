@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+Breaking changes:
+
+- Refactor module loading errors for easier catching by the CLI.
+
 ## v0.8.0 (2023-06-07)
 
 Breaking changes:
