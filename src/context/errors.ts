@@ -54,6 +54,30 @@ export class ModuleVersionError extends WorkspaceContextError {
 }
 
 /**
+ * An error thrown when the version of the module to load does not match the requirement from the configuration.
+ */
+export class IncompatibleModuleVersionError extends ModuleVersionError {
+  /**
+   * A flag indicating that this error is an {@link IncompatibleModuleVersionError}.
+   * Useful when catching this error after having created a workspace context in a worker thread, with possibly a
+   * different version of the `@causa/workspace` package.
+   */
+  readonly isIncompatibleModuleVersionError = true;
+
+  constructor(
+    readonly moduleName: string,
+    readonly moduleVersion: string,
+    readonly requiredVersion: string,
+  ) {
+    super(
+      moduleName,
+      moduleVersion,
+      `Module '${moduleName}' has version '${moduleVersion}' which does not match the configuration requirement '${requiredVersion}'.`,
+    );
+  }
+}
+
+/**
  * An error thrown when a processor return value does not contain a valid configuration.
  */
 export class InvalidProcessorOutputError extends WorkspaceContextError {

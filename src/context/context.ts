@@ -404,7 +404,7 @@ export class WorkspaceContext {
 
     const functionRegistry = new FunctionRegistry(WorkspaceFunction);
 
-    await loadModules(rootPath, configuration, functionRegistry, logger);
+    await loadModules(configuration, functionRegistry, logger);
 
     let context = new WorkspaceContext(
       workingDirectory,

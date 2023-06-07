@@ -6,7 +6,7 @@ This document is addressed to Causa module developers, who need more information
 
 ## Configuration
 
-The [`configuration`](./src/configuration/) folder exposes the `ConfigurationReader`, which implements a generic way of loading a YAML / JSON configuration from several files. It also provides a rendering API, to format configuration values from other configuration values or using custom functions.
+The [`configuration`](./src/configuration/) folder exposes the `ConfigurationReader`, which implements a generic way of loading a YAML / JSON configuration from several files. It also provides a rendering API, to format configuration values from other configuration values and using custom functions.
 
 ## Workspace context
 
@@ -15,6 +15,10 @@ The [`context`](./src/context/) folder exposes the main part of the workspace AP
 ## Function registry
 
 The [`function-registry`](./src/function-registry/) folder exposes the `FunctionRegistry`, which is how function definitions and implementations are registered, as well as called. The `FunctionRegistry` is parameterized with a context object, which for `WorkspaceContext.functionRegistry` is the `WorkspaceContext` itself.
+
+## Initialization
+
+The [`initialization`](./src/initialization/) folder exposes utilities to initialize an existing workspace, i.e. install the required modules in the Causa folder (`.causa`).
 
 ## Service cache
 

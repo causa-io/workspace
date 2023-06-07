@@ -1,17 +1,20 @@
 import { readFile } from 'fs/promises';
-import { dirname, resolve } from 'path';
+import { dirname } from 'path';
 import { Logger } from 'pino';
 import resolvePackagePath from 'resolve-package-path';
-import { satisfies } from 'semver';
+import { satisfies, validRange } from 'semver';
 import { fileURLToPath } from 'url';
-import { isModuleLocalPath } from '../file-utils.js';
 import {
   FunctionRegistry,
   ImplementableFunctionImplementationConstructor,
 } from '../function-registry/index.js';
 import { WorkspaceConfiguration } from './configuration.js';
 import { WorkspaceContext } from './context.js';
-import { ModuleNotFoundError, ModuleVersionError } from './errors.js';
+import {
+  IncompatibleModuleVersionError,
+  ModuleNotFoundError,
+  ModuleVersionError,
+} from './errors.js';
 import { WorkspaceFunction } from './functions.js';
 
 /**
@@ -79,47 +82,41 @@ async function checkModuleVersion(
   }
 
   if (!satisfies(version, moduleVersion)) {
-    throw new ModuleVersionError(
+    throw new IncompatibleModuleVersionError(
       moduleName,
+      version,
       moduleVersion,
-      `Module '${moduleName}' has version '${version}' which does not match the configuration requirement '${moduleVersion}'.`,
     );
   }
 }
 
 /**
  * Loads a module in the context, making new functions, secret backends, etc available.
- * If the module has a valid npm package name, its version is checked against `moduleVersion`.
- * Absolute and relative paths are also supported, and are not checked for a version.
- * (A path is detected using {@link isModuleLocalPath}.)
+ * If `moduleVersion` is a valid semantic version (range), it is checked against the version of the module.
+ * Invalid semantic versions (e.g. local paths) are ignored.
  *
  * @param moduleName The name of the JavaScript module, as it would be loaded from JavaScript code.
  * @param moduleVersion The expected version for the module, as a `semver` string.
- * @param basePath The base path used to resolve relative module paths.
  * @param functionRegistry The {@link FunctionRegistry} to which functions should be registered.
  * @param logger The logger to use.
  */
 async function loadModule(
   moduleName: string,
   moduleVersion: string,
-  basePath: string,
   functionRegistry: FunctionRegistry<WorkspaceContext>,
   logger: Logger,
 ): Promise<void> {
   try {
-    const isPath = isModuleLocalPath(moduleName);
-    const importName = isPath ? resolve(basePath, moduleName) : moduleName;
+    logger.debug(`🔨 Loading module '${moduleName}'.`);
 
-    logger.debug(`🔨 Loading module '${importName}'.`);
-
-    if (!isPath) {
+    if (validRange(moduleVersion)) {
       await checkModuleVersion(moduleName, moduleVersion);
     }
 
-    const registerModule = (await import(importName))
+    const registerModule = (await import(moduleName))
       .default as ModuleRegistrationFunction;
 
-    logger.debug(`🔨 Registering module '${importName}'.`);
+    logger.debug(`🔨 Registering module '${moduleName}'.`);
     await registerModule({
       registerFunctionImplementations: (...implementations) =>
         functionRegistry.registerImplementations(...implementations),
@@ -136,13 +133,11 @@ async function loadModule(
 /**
  * Loads the core module, as well as all the modules listed in the workspace configuration.
  *
- * @param rootPath The root of the workspace, from which relative module paths will be resolved.
  * @param configuration The {@link WorkspaceConfiguration} from which the list modules be read.
  * @param functionRegistry The {@link FunctionRegistry} to which functions should be registered.
  * @param logger The logger to use.
  */
 export async function loadModules(
-  rootPath: string,
   configuration: WorkspaceConfiguration,
   functionRegistry: FunctionRegistry<WorkspaceContext>,
   logger: Logger,
@@ -160,7 +155,7 @@ export async function loadModules(
 
   await Promise.all(
     modulesAndVersions.map(([moduleName, moduleVersion]) =>
-      loadModule(moduleName, moduleVersion, rootPath, functionRegistry, logger),
+      loadModule(moduleName, moduleVersion, functionRegistry, logger),
     ),
   );
 }

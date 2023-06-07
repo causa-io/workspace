@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+Breaking changes:
+
+- Remove the `isModuleLocalPath` utility.
+- Support local paths for modules the npm way, i.e. specify `file:<path>` as the version.
+
+Features:
+
+- Move the `setUpCausaFolder` from the `@causa/cli` package to this package.
+- Specify the `IncompatibleModuleVersionError` to ease version errors detection, even across worker threads.
+
 ## v0.7.0 (2023-05-22)
 
 Features:

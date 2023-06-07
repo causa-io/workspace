@@ -1,7 +1,7 @@
 import { mkdir, mkdtemp, rm, writeFile } from 'fs/promises';
 import 'jest-extended';
 import { join, resolve } from 'path';
-import { isModuleLocalPath, listFilesAndFormat } from './file-utils.js';
+import { listFilesAndFormat } from './file-utils.js';
 
 describe('file-utils', () => {
   describe('listFilesAndFormat', () => {
@@ -78,20 +78,6 @@ describe('file-utils', () => {
         'allowed1/first.oops',
         'allowed1/second.oopsAgain',
       ]);
-    });
-  });
-
-  describe('isModuleLocalPath', () => {
-    it('should return true when the module is a relative path', () => {
-      expect(isModuleLocalPath('./some/path')).toBeTrue();
-    });
-
-    it('should return true when the module is an absolute path', () => {
-      expect(isModuleLocalPath('/some/path')).toBeTrue();
-    });
-
-    it('should return false for a valid npm package name', () => {
-      expect(isModuleLocalPath('some-module')).toBeFalse();
     });
   });
 });
