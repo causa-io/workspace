@@ -12,8 +12,8 @@ import { WorkspaceConfiguration } from './configuration.js';
 import { WorkspaceContext } from './context.js';
 import {
   IncompatibleModuleVersionError,
+  ModuleLoadingError,
   ModuleNotFoundError,
-  ModuleVersionError,
 } from './errors.js';
 import { WorkspaceFunction } from './functions.js';
 
@@ -66,17 +66,17 @@ async function checkModuleVersion(
     version = packageInfo.version;
   } catch (error: any) {
     const message = error.message ?? error;
-    throw new ModuleVersionError(
+    throw new ModuleLoadingError(
       moduleName,
-      moduleVersion,
+      false,
       `Failed to fetch the version for package '${moduleName}': '${message}'.`,
     );
   }
 
   if (!version) {
-    throw new ModuleVersionError(
+    throw new ModuleLoadingError(
       moduleName,
-      moduleVersion,
+      false,
       `Failed to find the version in the package.json for '${moduleName}'.`,
     );
   }
