@@ -292,10 +292,10 @@ export class WorkspaceContext {
       throw new InvalidSecretDefinitionError(`Expected an object.`, secretId);
     }
 
-    let { backend, ...configuration } = secret;
-    if (!backend) {
-      backend = this.get('causa.secrets.defaultBackend');
-    }
+    const { backend, ...configuration } = {
+      backend: this.get('causa.secrets.defaultBackend'),
+      ...secret,
+    };
     if (!backend) {
       throw new SecretBackendNotSpecifiedError(secretId);
     }
