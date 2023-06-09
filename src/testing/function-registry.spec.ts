@@ -32,7 +32,9 @@ describe('function-registry', () => {
       );
 
       expect(context.call(MyDefinition, { someArg: '🎉' })).toEqual('🏷️ - 🎉');
-      expect(actualMock).toHaveBeenCalledOnceWith(context, { someArg: '🎉' });
+      expect(actualMock).toHaveBeenCalledExactlyOnceWith(context, {
+        someArg: '🎉',
+      });
     });
 
     it('should evaluate the supports function', () => {
