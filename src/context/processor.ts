@@ -30,5 +30,5 @@ export type ProcessorResult = {
  * A {@link WorkspaceFunction} that can be used as a processor when creating a workspace context.
  * Its return value should contain a configuration object that will be merged into the workspace configuration.
  */
-export interface ProcessorFunction
+export interface ProcessorFunction // eslint-disable-line @typescript-eslint/no-empty-interface
   extends WorkspaceFunction<Promise<ProcessorResult>> {}

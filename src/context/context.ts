@@ -1,4 +1,5 @@
-import { resolve } from 'path';
+import { globby } from 'globby';
+import { join, resolve } from 'path';
 import { Logger, pino } from 'pino';
 import { GetFieldType } from '../configuration/index.js';
 import {
@@ -107,6 +108,33 @@ export class WorkspaceContext {
     }
 
     return projectPath;
+  }
+
+  /**
+   * Lists the additional directories belonging to the current project, based on the `project.additionalDirectories`
+   * configuration.
+   *
+   * @returns The list of additional directories that are part of the project.
+   */
+  async getProjectAdditionalDirectories(): Promise<string[]> {
+    const additionalDirectories = this.get('project.additionalDirectories');
+    if (!additionalDirectories || additionalDirectories.length === 0) {
+      return [];
+    }
+
+    const additionalPaths = await globby(additionalDirectories, {
+      gitignore: true,
+      onlyDirectories: true,
+      cwd: this.rootPath,
+    });
+
+    this.logger.debug(
+      `📂 Found additional directories for the project in the configuration: ${additionalPaths
+        .map((p) => `'${p}'`)
+        .join(', ')}.`,
+    );
+
+    return additionalPaths.map((p) => join(this.rootPath, p));
   }
 
   /**
@@ -292,10 +320,10 @@ export class WorkspaceContext {
       throw new InvalidSecretDefinitionError(`Expected an object.`, secretId);
     }
 
-    let { backend, ...configuration } = secret;
-    if (!backend) {
-      backend = this.get('causa.secrets.defaultBackend');
-    }
+    const { backend, ...configuration } = {
+      backend: this.get('causa.secrets.defaultBackend'),
+      ...secret,
+    };
     if (!backend) {
       throw new SecretBackendNotSpecifiedError(secretId);
     }

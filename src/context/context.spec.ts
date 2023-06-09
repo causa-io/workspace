@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from 'fs/promises';
+import { mkdir, mkdtemp, rm } from 'fs/promises';
 import 'jest-extended';
 import { tmpdir } from 'os';
 import { join, resolve } from 'path';
@@ -59,6 +59,8 @@ describe('WorkspaceContext', () => {
         workingDirectory: expectedProjectDir,
         environment: 'dev',
       });
+      const actualAdditionalDirectories =
+        await actualContext.getProjectAdditionalDirectories();
 
       expect(actualContext.workingDirectory).toEqual(expectedProjectDir);
       expect(actualContext.rootPath).toEqual(tmpDir);
@@ -69,6 +71,7 @@ describe('WorkspaceContext', () => {
       expect(() => actualContext.getOrThrow('🙅')).toThrow(
         ConfigurationValueNotFoundError,
       );
+      expect(actualAdditionalDirectories).toBeEmpty();
     });
 
     it('should throw when the project and environment are not set', async () => {
@@ -89,6 +92,59 @@ describe('WorkspaceContext', () => {
       );
       expect(() => actualContext.getEnvironmentOrThrow()).toThrow(
         EnvironmentNotSetError,
+      );
+    });
+
+    it('should return project additional directories', async () => {
+      const workspaceConfiguration: PartialConfiguration<BaseConfiguration> = {
+        workspace: { name: 'my-workspace' },
+      };
+      const projectConfiguration: PartialConfiguration<BaseConfiguration> = {
+        project: {
+          name: 'my-project',
+          type: '🐍',
+          language: '🇫🇷',
+          additionalDirectories: ['domain/*/sub-path'],
+        },
+      };
+      await writeConfiguration(tmpDir, './causa.yaml', workspaceConfiguration);
+      await writeConfiguration(
+        tmpDir,
+        './project/causa.yaml',
+        projectConfiguration,
+      );
+      const firstAdditionalDir = join(
+        tmpDir,
+        'domain',
+        'my-domain',
+        'sub-path',
+      );
+      const secondAdditionalDir = join(
+        tmpDir,
+        'domain',
+        'other-domain',
+        'sub-path',
+      );
+      await mkdir(join(firstAdditionalDir, 'some-dir'), { recursive: true });
+      await mkdir(secondAdditionalDir, { recursive: true });
+      await mkdir(join(tmpDir, 'nope'), { recursive: true });
+      const expectedProjectDir = join(tmpDir, 'project');
+      const expectedAdditionalDirectories = [
+        firstAdditionalDir,
+        secondAdditionalDir,
+      ];
+
+      const actualContext = await WorkspaceContext.init({
+        workingDirectory: expectedProjectDir,
+      });
+      const actualAdditionalDirectories =
+        await actualContext.getProjectAdditionalDirectories();
+
+      expect(actualContext.workingDirectory).toEqual(expectedProjectDir);
+      expect(actualContext.rootPath).toEqual(tmpDir);
+      expect(actualContext.projectPath).toEqual(expectedProjectDir);
+      expect(actualAdditionalDirectories).toContainAllValues(
+        expectedAdditionalDirectories,
       );
     });
   });

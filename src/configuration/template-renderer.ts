@@ -4,7 +4,7 @@ import { ReferencedDataError, TemplateRenderingError } from './errors.js';
 /**
  * A value that can be used in a template.
  */
-export type DataValue = {} | null;
+export type DataValue = NonNullable<unknown> | null;
 
 /**
  * A function that asynchronously fetches a configuration value.

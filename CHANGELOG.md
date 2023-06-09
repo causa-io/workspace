@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+Features:
+
+- Define the `project.additionalDirectories` configuration field.
+- Implement the `WorkspaceContext.getProjectAdditionalDirectories` utility.
+
 ## v0.9.0 (2023-06-07)
 
 Breaking changes:
