@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.10.0 (2023-06-09)
+
 Features:
 
 - Define the `project.additionalDirectories` configuration field.
