@@ -241,6 +241,33 @@ describe('WorkspaceContext', () => {
         secondProcessor,
       ]);
     });
+
+    it('should remove all processors when `processors` is `null`', async () => {
+      const configuration: PartialConfiguration<BaseConfiguration> & {
+        [k: string]: any;
+      } = {
+        workspace: { name: 'my-workspace' },
+        causa: {
+          modules: {
+            [fileURLToPath(
+              new URL('./context.processor.module.test.ts', import.meta.url),
+            )]: 'file:/path',
+          },
+        },
+      };
+      await writeConfiguration(tmpDir, './causa.yaml', configuration);
+      const firstProcessor = { name: 'MyProcessor', args: { value: '🔧' } };
+      const baseContext = await WorkspaceContext.init({
+        workingDirectory: tmpDir,
+        processors: [firstProcessor],
+      });
+
+      const actualContext = await baseContext.clone({ processors: null });
+
+      expect(actualContext.get('myProcessorConf')).toBeUndefined();
+      expect(baseContext.processors).toEqual([firstProcessor]);
+      expect(actualContext.processors).toBeEmpty();
+    });
   });
 
   describe('modules', () => {
