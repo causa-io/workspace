@@ -149,6 +149,30 @@ describe('WorkspaceContext', () => {
     });
   });
 
+  describe('listProjectPaths', () => {
+    it('should return the list of project paths', async () => {
+      await writeConfiguration(tmpDir, './causa.yaml', {
+        workspace: { name: 'my-workspace' },
+      });
+      await writeConfiguration(tmpDir, './project/causa.yaml', {
+        project: { name: 'my-project', type: '🐍', language: '🇫🇷' },
+      });
+      await writeConfiguration(tmpDir, './project2/causa.yaml', {
+        project: { name: 'my-project', type: '🐍', language: '🇫🇷' },
+      });
+      const context = await WorkspaceContext.init({
+        workingDirectory: join(tmpDir, 'project'),
+      });
+
+      const actualProjectPaths = await context.listProjectPaths();
+
+      expect(actualProjectPaths).toContainAllValues([
+        join(tmpDir, 'project'),
+        join(tmpDir, 'project2'),
+      ]);
+    });
+  });
+
   describe('clone', () => {
     it('should return a modified copy of the workspace', async () => {
       const workspaceConfiguration: PartialConfiguration<BaseConfiguration> = {
@@ -216,6 +240,33 @@ describe('WorkspaceContext', () => {
         firstProcessor,
         secondProcessor,
       ]);
+    });
+
+    it('should remove all processors when `processors` is `null`', async () => {
+      const configuration: PartialConfiguration<BaseConfiguration> & {
+        [k: string]: any;
+      } = {
+        workspace: { name: 'my-workspace' },
+        causa: {
+          modules: {
+            [fileURLToPath(
+              new URL('./context.processor.module.test.ts', import.meta.url),
+            )]: 'file:/path',
+          },
+        },
+      };
+      await writeConfiguration(tmpDir, './causa.yaml', configuration);
+      const firstProcessor = { name: 'MyProcessor', args: { value: '🔧' } };
+      const baseContext = await WorkspaceContext.init({
+        workingDirectory: tmpDir,
+        processors: [firstProcessor],
+      });
+
+      const actualContext = await baseContext.clone({ processors: null });
+
+      expect(actualContext.get('myProcessorConf')).toBeUndefined();
+      expect(baseContext.processors).toEqual([firstProcessor]);
+      expect(actualContext.processors).toBeEmpty();
     });
   });
 

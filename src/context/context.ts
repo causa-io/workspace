@@ -14,6 +14,7 @@ import { BaseConfiguration } from './base-configuration.js';
 import {
   TypedWorkspaceConfiguration,
   WorkspaceConfiguration,
+  listProjectPaths,
   loadWorkspaceConfiguration,
   makeProcessorConfiguration,
 } from './configuration.js';
@@ -49,8 +50,9 @@ export type WorkspaceContextOptions = {
 
   /**
    * A list of {@link ProcessorInstruction}s to run when initializing the context.
+   * Setting this to `null` explicitly removes processors when cloning a context.
    */
-  processors?: ProcessorInstruction[];
+  processors?: ProcessorInstruction[] | null;
 
   /**
    * The logger to use. Defaults to `pino()`.
@@ -149,6 +151,16 @@ export class WorkspaceContext {
     }
 
     return environment;
+  }
+
+  /**
+   * Looks for Causa configuration files from the workspace root directory, and returns the list of directory paths that
+   * contain a project
+   *
+   * @returns The list of paths.
+   */
+  async listProjectPaths(): Promise<string[]> {
+    return await listProjectPaths(this.rootPath);
   }
 
   /**
@@ -369,7 +381,10 @@ export class WorkspaceContext {
       environment: this.environment,
       logger: this.logger,
       ...options,
-      processors: [...this.processors, ...(options.processors ?? [])],
+      processors:
+        options.processors === null
+          ? []
+          : [...this.processors, ...(options.processors ?? [])],
     });
   }
 

@@ -1,4 +1,5 @@
 import { mkdtemp, rm } from 'fs/promises';
+import 'jest-extended';
 import { join, resolve } from 'path';
 import { Logger, pino } from 'pino';
 import {
@@ -10,6 +11,7 @@ import {
 import { BaseConfiguration } from './base-configuration.js';
 import {
   WorkspaceConfigurationSourceType,
+  listProjectPaths,
   loadWorkspaceConfiguration,
   makeProcessorConfiguration,
 } from './configuration.js';
@@ -214,6 +216,55 @@ describe('configuration', () => {
         sourceType: WorkspaceConfigurationSourceType.Processor,
         source: 'MyProcessor',
       });
+    });
+  });
+
+  describe('listProjectPaths', () => {
+    let tmpDir: string;
+
+    beforeEach(async () => {
+      tmpDir = resolve(await mkdtemp('causa-tests-'));
+    });
+
+    afterEach(async () => {
+      await rm(tmpDir, { recursive: true, force: true });
+    });
+
+    it('should return an empty list when no configuration can be found', async () => {
+      const actualPaths = await listProjectPaths(tmpDir);
+
+      expect(actualPaths).toBeEmpty();
+    });
+
+    it('should return a single path at the root of the workspace', async () => {
+      await writeConfiguration(tmpDir, './causa.yaml', {
+        workspace: { name: 'my-workspace' },
+        project: { name: 'my-project', type: '🐍', language: '🇫🇷' },
+      });
+
+      const actualPaths = await listProjectPaths(tmpDir);
+
+      expect(actualPaths).toEqual([tmpDir]);
+    });
+
+    it('should return several paths', async () => {
+      await writeConfiguration(tmpDir, './causa.yaml', {
+        workspace: { name: 'my-workspace' },
+      });
+      await writeConfiguration(tmpDir, './project1/causa.yaml', {
+        project: { name: 'my-project', type: '🐍', language: '🇫🇷' },
+      });
+      await writeConfiguration(tmpDir, './project2/causa.myproj.yaml', {
+        project: { name: 'my-other-project', type: '🐍', language: '🇫🇷' },
+      });
+      await writeConfiguration(tmpDir, './nope/causa.yaml', { causa: {} });
+
+      const actualPaths = await listProjectPaths(tmpDir);
+
+      expect(actualPaths).toEqual([
+        join(tmpDir, 'project1'),
+        join(tmpDir, 'project2'),
+      ]);
     });
   });
 });

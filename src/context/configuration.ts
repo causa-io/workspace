@@ -1,4 +1,5 @@
-import { readdir, readFile } from 'fs/promises';
+import { readFile } from 'fs/promises';
+import { globby } from 'globby';
 import { load } from 'js-yaml';
 import { get } from 'lodash-es';
 import { dirname, join } from 'path';
@@ -14,9 +15,16 @@ import { BaseConfiguration } from './base-configuration.js';
 import { InvalidWorkspaceConfigurationFilesError } from './errors.js';
 
 /**
- * The regular expression matching workspace (and project) configuration files.
+ * The glob patterns matching workspace (and project) configuration files.
  */
-const DEFAULT_CONFIGURATION_REGEXP = [/^causa(\..*)?\.yaml$/];
+const CONFIGURATION_PATTERNS = ['causa.yaml', 'causa.*.yaml'];
+
+/**
+ * The glob patterns matching workspace (and project) configuration files recursively.
+ */
+const RECURSIVE_CONFIGURATION_PATTERNS = CONFIGURATION_PATTERNS.map(
+  (pattern) => `**/${pattern}`,
+);
 
 /**
  * A {@link ConfigurationReader} specified to read the configuration of a workspace.
@@ -39,6 +47,24 @@ export enum WorkspaceConfigurationSourceType {
 }
 
 /**
+ * Creates a {@link RawConfiguration} from a file.
+ *
+ * @param source The path to the configuration file.
+ * @returns The {@link RawConfiguration}.
+ */
+export async function makeFileConfiguration<T = any>(
+  source: string,
+): Promise<RawConfiguration<T>> {
+  const content = await readFile(source, { encoding: 'utf-8' });
+  const configuration = load(content) as any;
+  return {
+    sourceType: ConfigurationReaderSourceType.File,
+    source,
+    configuration,
+  };
+}
+
+/**
  * Loads all the file configurations located in a folder or its parents.
  * Configurations are returned such that files located closer to the root of the file system appear first.
  * In a single folder, files are returned in descending alphabetical order.
@@ -50,7 +76,6 @@ export enum WorkspaceConfigurationSourceType {
  */
 async function loadRawConfigurations<T extends object>(
   basePath: string,
-  fileRegexps: RegExp[],
 ): Promise<RawConfiguration<T>[]> {
   const directories = [basePath];
 
@@ -60,25 +85,19 @@ async function loadRawConfigurations<T extends object>(
 
   const nestedConfigurations = await Promise.all(
     directories.map(async (path) => {
-      const files = await readdir(path);
-
-      const configurationFiles = files
-        .filter((file) => fileRegexps.some((r) => file.match(r)))
+      const configurationFiles = (
+        await globby(CONFIGURATION_PATTERNS, {
+          gitignore: true,
+          cwd: path,
+          deep: 0,
+        })
+      )
         .sort()
         .reverse();
 
       return await Promise.all(
-        configurationFiles.map(
-          async (fileName): Promise<RawConfiguration<T>> => {
-            const source = join(path, fileName);
-            const content = await readFile(source, { encoding: 'utf-8' });
-            const configuration = load(content) as any;
-            return {
-              sourceType: ConfigurationReaderSourceType.File,
-              source,
-              configuration,
-            };
-          },
+        configurationFiles.map((fileName) =>
+          makeFileConfiguration(join(path, fileName)),
         ),
       );
     }),
@@ -88,42 +107,67 @@ async function loadRawConfigurations<T extends object>(
 }
 
 /**
- * Looks for a single {@link RawConfiguration} with a non-null value at a given (object) path.
- * Returns the folder in which the configuration is located.
- * If more than one configuration matches, an error is thrown.
+ * Loads all the file configurations located in a folder or its subfolders.
+ *
+ * @param rootPath The root path from which configuration files are searched recursively.
+ * @returns The list of {@link RawConfiguration}s loaded from the root path and its subdirectories.
+ */
+async function loadRawConfigurationsFromRoot<T extends object>(
+  rootPath: string,
+): Promise<RawConfiguration<T>[]> {
+  const paths = await globby(RECURSIVE_CONFIGURATION_PATTERNS, {
+    gitignore: true,
+    cwd: rootPath,
+  });
+
+  return await Promise.all(
+    paths.map((path) => makeFileConfiguration(join(rootPath, path))),
+  );
+}
+
+/**
+ * Looks for {@link RawConfiguration}s with a non-null value at a given (object) path.
+ * Returns the folder in which the configurations are located.
+ * By default, if more than one configuration matches, an error is thrown. If `allowMultiple` is set to `true`, then
+ * all matching configurations and folders are returned.
  *
  * @param rawConfigurations The list of raw configurations from which the path should be extracted.
  * @param nonNullConfigurationPath A path in the raw configuration that should be non-null for it to be selected.
- * @returns The file path to the only matching configuration, or `null` if no configuration matched.
+ * @returns The paths to the directories containing the matching configurations.
  */
 function findPathInConfigurations(
   rawConfigurations: RawConfiguration<BaseConfiguration>[],
   nonNullConfigurationPath: string,
-): string | null {
+  options: {
+    /**
+     * Whether multiple configurations with a non-null value at the given path are allowed.
+     */
+    allowMultiple?: boolean;
+  } = {},
+): string[] {
   const matchingConfigurations = rawConfigurations.filter(
     (rawConfiguration) =>
       rawConfiguration.sourceType === ConfigurationReaderSourceType.File &&
       get(rawConfiguration.configuration, nonNullConfigurationPath) != null,
   );
 
-  if (matchingConfigurations.length === 0) {
-    return null;
-  }
+  const sources = matchingConfigurations.map(({ source }) => {
+    if (!source) {
+      throw new InvalidWorkspaceConfigurationFilesError(
+        `Unexpected null source for configuration file with '${nonNullConfigurationPath}' set.`,
+      );
+    }
 
-  if (matchingConfigurations.length > 1) {
+    return source;
+  });
+
+  if (!options.allowMultiple && matchingConfigurations.length > 1) {
     throw new InvalidWorkspaceConfigurationFilesError(
       `More than one configuration file were found with '${nonNullConfigurationPath}' set.`,
     );
   }
 
-  const source = matchingConfigurations[0].source;
-  if (!source) {
-    throw new InvalidWorkspaceConfigurationFilesError(
-      `Unexpected null source for configuration file with '${nonNullConfigurationPath}' set.`,
-    );
-  }
-
-  return dirname(source);
+  return [...new Set(sources.map((source) => dirname(source)))];
 }
 
 /**
@@ -168,7 +212,6 @@ export async function loadWorkspaceConfiguration(
 
   const configurations = await loadRawConfigurations<BaseConfiguration>(
     workingDirectory,
-    DEFAULT_CONFIGURATION_REGEXP,
   );
   if (configurations.length === 0) {
     throw new InvalidWorkspaceConfigurationFilesError(
@@ -196,7 +239,7 @@ export async function loadWorkspaceConfiguration(
     }
   }
 
-  const rootPath = findPathInConfigurations(configurations, 'workspace.name');
+  const [rootPath] = findPathInConfigurations(configurations, 'workspace.name');
   if (!rootPath) {
     throw new InvalidWorkspaceConfigurationFilesError(
       `Workspace root path could not be found when starting from working directory '${workingDirectory}'.`,
@@ -204,12 +247,27 @@ export async function loadWorkspaceConfiguration(
   }
   logger.debug(`📂 Found root of workspace at '${rootPath}'.`);
 
-  const projectPath = findPathInConfigurations(configurations, 'project.name');
+  const projectPath =
+    findPathInConfigurations(configurations, 'project.name')[0] ?? null;
   if (projectPath) {
     logger.debug(`📂 Found root of project at '${projectPath}'.`);
   }
 
   return { configuration, rootPath, projectPath };
+}
+
+/**
+ * Looks for all Causa configuration files in a given directory and its subdirectories, and returns the directories
+ * containing a project configuration.
+ *
+ * @param rootPath The root path from which configuration files are searched recursively.
+ * @returns The list of directory paths containing a project configuration.
+ */
+export async function listProjectPaths(rootPath: string): Promise<string[]> {
+  const configurations = await loadRawConfigurationsFromRoot(rootPath);
+  return findPathInConfigurations(configurations, 'project.name', {
+    allowMultiple: true,
+  });
 }
 
 /**
