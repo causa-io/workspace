@@ -297,11 +297,13 @@ export type TypedWorkspaceConfiguration<C extends object> = {
    * Returns the value at a given path in the configuration.
    *
    * @param path The path to the value in the configuration object.
+   *  If the path is not specified, the whole configuration is returned.
    * @returns The value, or `undefined` if the path does not exist.
    */
-  get: <TPath extends string>(
+  get: (<TPath extends string>(
     path: TPath,
-  ) => GetFieldType<BaseConfiguration & C, TPath>;
+  ) => GetFieldType<BaseConfiguration & C, TPath>) &
+    (() => BaseConfiguration & C);
 
   /**
    * Returns the value at a given path in the configuration, or throws an error if the path does not exist.
@@ -318,11 +320,13 @@ export type TypedWorkspaceConfiguration<C extends object> = {
    * templates.
    *
    * @param path The path to the value in the configuration object.
+   *  If the path is not specified, the whole configuration is returned.
    * @returns The value after rendering.
    */
-  getAndRender: <TPath extends string>(
+  getAndRender: (<TPath extends string>(
     path: TPath,
-  ) => Promise<GetFieldType<BaseConfiguration & C, TPath>>;
+  ) => Promise<GetFieldType<BaseConfiguration & C, TPath>>) &
+    (() => Promise<BaseConfiguration & C>);
 
   /**
    * Renders the value at a given path in the configuration object, by recursively walking the value and processing

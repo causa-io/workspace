@@ -71,6 +71,22 @@ describe('WorkspaceContext', () => {
       expect(() => actualContext.getOrThrow('🙅')).toThrow(
         ConfigurationValueNotFoundError,
       );
+      expect(actualContext.get()).toEqual({
+        workspace: { name: 'my-workspace' },
+        project: { name: 'my-project', type: '🐍', language: '🇫🇷' },
+        environments: {
+          dev: { name: 'Dev', configuration: { myService: { myValue: '🎉' } } },
+        },
+        myService: { myValue: '🎉' },
+      });
+      expect(await actualContext.getAndRender()).toEqual({
+        workspace: { name: 'my-workspace' },
+        project: { name: 'my-project', type: '🐍', language: '🇫🇷' },
+        environments: {
+          dev: { name: 'Dev', configuration: { myService: { myValue: '🎉' } } },
+        },
+        myService: { myValue: '🎉' },
+      });
       expect(actualAdditionalDirectories).toBeEmpty();
     });
 
