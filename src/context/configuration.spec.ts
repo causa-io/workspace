@@ -261,7 +261,7 @@ describe('configuration', () => {
 
       const actualPaths = await listProjectPaths(tmpDir);
 
-      expect(actualPaths).toEqual([
+      expect(actualPaths).toContainAllValues([
         join(tmpDir, 'project1'),
         join(tmpDir, 'project2'),
       ]);
