@@ -14,9 +14,9 @@ import { BaseConfiguration } from './base-configuration.js';
 import { InvalidWorkspaceConfigurationFilesError } from './errors.js';
 
 /**
- * The regular expression matching workspace (and project) configuration files.
+ * The glob patterns matching workspace (and project) configuration files.
  */
-const DEFAULT_CONFIGURATION_REGEXP = [/^causa(\..*)?\.yaml$/];
+const CONFIGURATION_PATTERNS = ['causa.yaml', 'causa.*.yaml'];
 
 /**
  * A {@link ConfigurationReader} specified to read the configuration of a workspace.
@@ -36,6 +36,24 @@ export enum WorkspaceConfigurationSourceType {
    * The configuration was added from the output of a processor.
    */
   Processor = 'processor',
+}
+
+/**
+ * Creates a {@link RawConfiguration} from a file.
+ *
+ * @param source The path to the configuration file.
+ * @returns The {@link RawConfiguration}.
+ */
+export async function makeFileConfiguration<T = any>(
+  source: string,
+): Promise<RawConfiguration<T>> {
+  const content = await readFile(source, { encoding: 'utf-8' });
+  const configuration = load(content) as any;
+  return {
+    sourceType: ConfigurationReaderSourceType.File,
+    source,
+    configuration,
+  };
 }
 
 /**
@@ -59,27 +77,19 @@ async function loadRawConfigurations<T extends object>(
 
   const nestedConfigurations = await Promise.all(
     directories.map(async (path) => {
-      const files = await readdir(path);
-
-      const configurationFiles = files
-        .filter((file) =>
-          DEFAULT_CONFIGURATION_REGEXP.some((r) => file.match(r)),
-        )
+      const configurationFiles = (
+        await globby(CONFIGURATION_PATTERNS, {
+          gitignore: true,
+          cwd: path,
+          deep: 0,
+        })
+      )
         .sort()
         .reverse();
 
       return await Promise.all(
-        configurationFiles.map(
-          async (fileName): Promise<RawConfiguration<T>> => {
-            const source = join(path, fileName);
-            const content = await readFile(source, { encoding: 'utf-8' });
-            const configuration = load(content) as any;
-            return {
-              sourceType: ConfigurationReaderSourceType.File,
-              source,
-              configuration,
-            };
-          },
+        configurationFiles.map((fileName) =>
+          makeFileConfiguration(join(path, fileName)),
         ),
       );
     }),
