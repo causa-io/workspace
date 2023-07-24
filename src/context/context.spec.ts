@@ -149,6 +149,30 @@ describe('WorkspaceContext', () => {
     });
   });
 
+  describe('listProjectPaths', () => {
+    it('should return the list of project paths', async () => {
+      await writeConfiguration(tmpDir, './causa.yaml', {
+        workspace: { name: 'my-workspace' },
+      });
+      await writeConfiguration(tmpDir, './project/causa.yaml', {
+        project: { name: 'my-project', type: '🐍', language: '🇫🇷' },
+      });
+      await writeConfiguration(tmpDir, './project2/causa.yaml', {
+        project: { name: 'my-project', type: '🐍', language: '🇫🇷' },
+      });
+      const context = await WorkspaceContext.init({
+        workingDirectory: join(tmpDir, 'project'),
+      });
+
+      const actualProjectPaths = await context.listProjectPaths();
+
+      expect(actualProjectPaths).toContainAllValues([
+        join(tmpDir, 'project'),
+        join(tmpDir, 'project2'),
+      ]);
+    });
+  });
+
   describe('clone', () => {
     it('should return a modified copy of the workspace', async () => {
       const workspaceConfiguration: PartialConfiguration<BaseConfiguration> = {

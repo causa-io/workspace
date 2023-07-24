@@ -14,6 +14,7 @@ import { BaseConfiguration } from './base-configuration.js';
 import {
   TypedWorkspaceConfiguration,
   WorkspaceConfiguration,
+  listProjectPaths,
   loadWorkspaceConfiguration,
   makeProcessorConfiguration,
 } from './configuration.js';
@@ -149,6 +150,16 @@ export class WorkspaceContext {
     }
 
     return environment;
+  }
+
+  /**
+   * Looks for Causa configuration files from the workspace root directory, and returns the list of directory paths that
+   * contain a project
+   *
+   * @returns The list of paths.
+   */
+  async listProjectPaths(): Promise<string[]> {
+    return await listProjectPaths(this.rootPath);
   }
 
   /**
