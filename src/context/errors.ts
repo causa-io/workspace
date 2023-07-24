@@ -100,7 +100,10 @@ export class InvalidSecretDefinitionError extends SecretError {
    * @param secretId The ID of the secret.
    *   When throwing the error from a secret backend, this can be left undefined and will be populated by the fetcher.
    */
-  constructor(message: string, readonly secretId?: string) {
+  constructor(
+    message: string,
+    readonly secretId?: string,
+  ) {
     super(
       secretId
         ? `Invalid definition for secret '${secretId}': ${message}`
