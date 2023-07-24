@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.11.0 (2023-07-24)
+
 Features:
 
 - Implement the `WorkspaceContext.listProjectPaths` utility.
