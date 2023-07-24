@@ -1,4 +1,5 @@
-import { readdir, readFile } from 'fs/promises';
+import { readFile } from 'fs/promises';
+import { globby } from 'globby';
 import { load } from 'js-yaml';
 import { get } from 'lodash-es';
 import { dirname, join } from 'path';
@@ -17,6 +18,13 @@ import { InvalidWorkspaceConfigurationFilesError } from './errors.js';
  * The glob patterns matching workspace (and project) configuration files.
  */
 const CONFIGURATION_PATTERNS = ['causa.yaml', 'causa.*.yaml'];
+
+/**
+ * The glob patterns matching workspace (and project) configuration files recursively.
+ */
+const RECURSIVE_CONFIGURATION_PATTERNS = CONFIGURATION_PATTERNS.map(
+  (pattern) => `**/${pattern}`,
+);
 
 /**
  * A {@link ConfigurationReader} specified to read the configuration of a workspace.
@@ -96,6 +104,25 @@ async function loadRawConfigurations<T extends object>(
   );
 
   return nestedConfigurations.flatMap((c) => c);
+}
+
+/**
+ * Loads all the file configurations located in a folder or its subfolders.
+ *
+ * @param rootPath The root path from which configuration files are searched recursively.
+ * @returns The list of {@link RawConfiguration}s loaded from the root path and its subdirectories.
+ */
+async function loadRawConfigurationsFromRoot<T extends object>(
+  rootPath: string,
+): Promise<RawConfiguration<T>[]> {
+  const paths = await globby(RECURSIVE_CONFIGURATION_PATTERNS, {
+    gitignore: true,
+    cwd: rootPath,
+  });
+
+  return await Promise.all(
+    paths.map((path) => makeFileConfiguration(join(rootPath, path))),
+  );
 }
 
 /**
@@ -227,6 +254,20 @@ export async function loadWorkspaceConfiguration(
   }
 
   return { configuration, rootPath, projectPath };
+}
+
+/**
+ * Looks for all Causa configuration files in a given directory and its subdirectories, and returns the directories
+ * containing a project configuration.
+ *
+ * @param rootPath The root path from which configuration files are searched recursively.
+ * @returns The list of directory paths containing a project configuration.
+ */
+export async function listProjectPaths(rootPath: string): Promise<string[]> {
+  const configurations = await loadRawConfigurationsFromRoot(rootPath);
+  return findPathInConfigurations(configurations, 'project.name', {
+    allowMultiple: true,
+  });
 }
 
 /**
