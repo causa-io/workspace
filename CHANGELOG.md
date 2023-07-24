@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+Features:
+
+- Make `WorkspaceContext.get[AndRender]()` accept no argument to retrieve the entire configuration.
+
 ## v0.11.0 (2023-07-24)
 
 Features:

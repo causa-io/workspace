@@ -164,6 +164,13 @@ export class WorkspaceContext {
   }
 
   /**
+   * Returns the entire configuration for the current context.
+   *
+   * @returns The configuration.
+   */
+  get(): BaseConfiguration;
+
+  /**
    * Returns the value at a given path in the configuration.
    *
    * @param path The path to the value in the configuration object.
@@ -171,8 +178,10 @@ export class WorkspaceContext {
    */
   get<TPath extends string>(
     path: TPath,
-  ): GetFieldType<BaseConfiguration, TPath> {
-    return this.configuration.get(path);
+  ): GetFieldType<BaseConfiguration, TPath>;
+
+  get(path?: string): any {
+    return this.configuration.get(path as any);
   }
 
   /**
@@ -188,18 +197,27 @@ export class WorkspaceContext {
   }
 
   /**
+   * Returns the entire configuration for the current context, after rendering all templates.
+   *
+   * @returns The rendered configuration.
+   */
+  getAndRender(): Promise<BaseConfiguration>;
+
+  /**
    * Renders the value at a given path in the configuration object, by recursively walking the value and processing
    * templates.
    *
    * @param path The path to the value in the configuration object.
    * @returns The value after rendering.
    */
-  async getAndRender<TPath extends string>(
+  getAndRender<TPath extends string>(
     path: TPath,
-  ): Promise<GetFieldType<BaseConfiguration, TPath>> {
+  ): Promise<GetFieldType<BaseConfiguration, TPath>>;
+
+  async getAndRender(path?: string): Promise<any> {
     return await this.configuration.getAndRender(
       { secret: (secretId: string) => this.secret(secretId) },
-      path,
+      path as any,
     );
   }
 
