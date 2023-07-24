@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+Features:
+
+- Implement the `WorkspaceContext.listProjectPaths` utility.
+- Support the `null` value for `processors` when cloning a context, removing all processors.
+
 ## v0.10.0 (2023-06-09)
 
 Features:
