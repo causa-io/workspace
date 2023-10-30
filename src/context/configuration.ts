@@ -210,9 +210,8 @@ export async function loadWorkspaceConfiguration(
     `🔧 Looking for configurations starting from working directory '${workingDirectory}'.`,
   );
 
-  const configurations = await loadRawConfigurations<BaseConfiguration>(
-    workingDirectory,
-  );
+  const configurations =
+    await loadRawConfigurations<BaseConfiguration>(workingDirectory);
   if (configurations.length === 0) {
     throw new InvalidWorkspaceConfigurationFilesError(
       `No configuration file was found starting at working directory '${workingDirectory}'.`,
