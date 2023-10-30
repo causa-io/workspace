@@ -1,5 +1,6 @@
 import { mkdtemp, rm } from 'fs/promises';
 import 'jest-extended';
+import { tmpdir } from 'os';
 import { join, resolve } from 'path';
 import { Logger, pino } from 'pino';
 import {
@@ -24,7 +25,7 @@ describe('configuration', () => {
     let logger: Logger;
 
     beforeEach(async () => {
-      tmpDir = resolve(await mkdtemp('causa-tests-'));
+      tmpDir = await mkdtemp(join(tmpdir(), 'causa-test-'));
       logger = pino();
     });
 
