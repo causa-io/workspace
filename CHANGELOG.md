@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.12.1 (2023-10-30)
+
 Chore:
 
 - Set up Causa for the repository.
