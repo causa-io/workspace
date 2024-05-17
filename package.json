@@ -6,7 +6,7 @@
   "license": "ISC",
   "type": "module",
   "engines": {
-    "node": ">=16"
+    "node": ">=18"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -45,7 +45,7 @@
     "semver": "^7.6.2"
   },
   "devDependencies": {
-    "@tsconfig/node18": "^18.2.4",
+    "@tsconfig/node20": "^20.1.4",
     "@types/jest": "^29.5.12",
     "@types/js-yaml": "^4.0.9",
     "@types/lodash-es": "^4.17.12",

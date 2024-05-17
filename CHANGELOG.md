@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+Breaking change:
+
+- Drop support for Node.js 16.
+
 Chore:
 
 - Upgrade dependencies.
