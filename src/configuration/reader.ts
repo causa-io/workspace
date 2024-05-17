@@ -31,8 +31,8 @@ export type PartialConfiguration<T> = {
   [P in keyof T]?: T[P] extends (infer U)[]
     ? PartialConfiguration<U>[]
     : T[P] extends object
-    ? PartialConfiguration<T[P]>
-    : T[P];
+      ? PartialConfiguration<T[P]>
+      : T[P];
 };
 
 /**
