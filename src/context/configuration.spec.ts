@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from 'fs/promises';
+import { mkdtemp, rm, symlink } from 'fs/promises';
 import 'jest-extended';
 import { tmpdir } from 'os';
 import { join, resolve } from 'path';
@@ -248,7 +248,7 @@ describe('configuration', () => {
       expect(actualPaths).toEqual([tmpDir]);
     });
 
-    it('should return several paths', async () => {
+    it('should return several paths and ignore symbolic links', async () => {
       await writeConfiguration(tmpDir, './causa.yaml', {
         workspace: { name: 'my-workspace' },
       });
@@ -259,6 +259,7 @@ describe('configuration', () => {
         project: { name: 'my-other-project', type: '🐍', language: '🇫🇷' },
       });
       await writeConfiguration(tmpDir, './nope/causa.yaml', { causa: {} });
+      await symlink(join(tmpDir, 'project1'), join(tmpDir, 'project3'));
 
       const actualPaths = await listProjectPaths(tmpDir);
 

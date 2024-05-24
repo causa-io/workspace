@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+Breaking change:
+
+- Do not follow symlinks when looking for projects in the workspace.
+
 ## v0.13.0 (2024-05-17)
 
 Breaking change:

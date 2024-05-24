@@ -118,6 +118,7 @@ async function loadRawConfigurationsFromRoot<T extends object>(
   const paths = await globby(RECURSIVE_CONFIGURATION_PATTERNS, {
     gitignore: true,
     cwd: rootPath,
+    followSymbolicLinks: false,
   });
 
   return await Promise.all(
