@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm } from 'fs/promises';
+import { mkdir, mkdtemp, rm, symlink } from 'fs/promises';
 import 'jest-extended';
 import { tmpdir } from 'os';
 import { join, resolve } from 'path';
@@ -111,7 +111,7 @@ describe('WorkspaceContext', () => {
       );
     });
 
-    it('should return project additional directories', async () => {
+    it('should return project additional directories and not follow symlinks', async () => {
       const workspaceConfiguration: PartialConfiguration<BaseConfiguration> = {
         workspace: { name: 'my-workspace' },
       };
@@ -144,6 +144,10 @@ describe('WorkspaceContext', () => {
       await mkdir(join(firstAdditionalDir, 'some-dir'), { recursive: true });
       await mkdir(secondAdditionalDir, { recursive: true });
       await mkdir(join(tmpDir, 'nope'), { recursive: true });
+      await symlink(
+        join(tmpDir, 'domain', 'my-domain'),
+        join(tmpDir, 'domain', 'symlink'),
+      );
       const expectedProjectDir = join(tmpDir, 'project');
       const expectedAdditionalDirectories = [
         firstAdditionalDir,

@@ -128,6 +128,7 @@ export class WorkspaceContext {
       gitignore: true,
       onlyDirectories: true,
       cwd: this.rootPath,
+      followSymbolicLinks: false,
     });
 
     this.logger.debug(

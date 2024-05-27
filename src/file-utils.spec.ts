@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, writeFile } from 'fs/promises';
+import { mkdir, mkdtemp, rm, symlink, writeFile } from 'fs/promises';
 import 'jest-extended';
 import { join, resolve } from 'path';
 import { listFilesAndFormat } from './file-utils.js';
@@ -25,6 +25,10 @@ describe('file-utils', () => {
       await writeFile(join(tmpDir, 'allowed2/third.test'), '🎁');
       await writeFile(join(tmpDir, 'allowed2/nope.other'), '🎁');
       await writeFile(join(tmpDir, 'nope/no.test'), '🎁');
+      await symlink(
+        join(tmpDir, 'allowed1/second.test'),
+        join(tmpDir, 'allowed1/nope.test'),
+      );
 
       const actualMatches = await listFilesAndFormat(
         ['allowed1/**/*.test', 'allowed2/*.test'],
