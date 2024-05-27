@@ -25,6 +25,7 @@ export type FormattedMatchedFile = {
 /**
  * Lists files using the given globs, extracts information from the paths, and renders a string using the provided
  * template.
+ * It does not follow symbolic links by default.
  *
  * @param globs The glob pattern used to find the files.
  * @param regExp The regular expression matched against the found file paths.
@@ -39,7 +40,12 @@ export async function listFilesAndFormat(
   regExp: string | RegExp,
   format: string,
   rootPath: string,
-  options: { nonMatchingPathHandler?: (path: string) => void } & Options = {},
+  options: {
+    /**
+     * A function called when a path found using glob patterns does not match the regular expression.
+     */
+    nonMatchingPathHandler?: (path: string) => void;
+  } & Options = {},
 ): Promise<FormattedMatchedFile[]> {
   const { nonMatchingPathHandler, ...globbyOptions } = options;
 
@@ -47,6 +53,7 @@ export async function listFilesAndFormat(
 
   const paths = await globby(globs, {
     gitignore: true,
+    followSymbolicLinks: false,
     ...globbyOptions,
     cwd: rootPath,
   });
