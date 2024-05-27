@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.15.0 (2024-05-27)
+
 Breaking changes:
 
 - Do not follow symlinks when looking for additional project directories and in the `listFilesAndFormat` utility.
