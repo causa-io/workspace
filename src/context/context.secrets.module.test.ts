@@ -1,5 +1,5 @@
 import { InvalidSecretDefinitionError } from './errors.js';
-import { ModuleRegistrationFunction } from './modules.js';
+import type { ModuleRegistrationFunction } from './modules.js';
 import { SecretFetch } from './secrets.js';
 
 export class MySecretBackend extends SecretFetch {

@@ -1,7 +1,7 @@
 import { exec } from 'child_process';
 import { mkdir, rm, writeFile } from 'fs/promises';
 import { join, resolve } from 'path';
-import { Logger } from 'pino';
+import type { Logger } from 'pino';
 import { ModuleInstallationError } from './errors.js';
 
 /**

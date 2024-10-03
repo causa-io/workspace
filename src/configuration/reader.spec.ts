@@ -6,7 +6,7 @@ import {
 import {
   ConfigurationReader,
   ConfigurationReaderSourceType,
-  RawConfiguration,
+  type RawConfiguration,
 } from './reader.js';
 
 type MyConf = {

@@ -1,7 +1,7 @@
 import { IsString } from 'class-validator';
 import { WorkspaceFunction } from './functions.js';
-import { ModuleRegistrationFunction } from './modules.js';
-import { ProcessorFunction, ProcessorResult } from './processor.js';
+import type { ModuleRegistrationFunction } from './modules.js';
+import type { ProcessorFunction, ProcessorResult } from './processor.js';
 
 export class MyProcessor
   extends WorkspaceFunction<

@@ -1,4 +1,4 @@
-import { ImplementableFunctionDefinitionConstructor } from './definition.js';
+import type { ImplementableFunctionDefinitionConstructor } from './definition.js';
 
 /**
  * The base class for function registry errors.

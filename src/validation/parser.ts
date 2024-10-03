@@ -1,7 +1,7 @@
-import { ClassConstructor, plainToInstance } from 'class-transformer';
+import { type ClassConstructor, plainToInstance } from 'class-transformer';
 import {
   ValidationError as ClassValidationError,
-  ValidatorOptions,
+  type ValidatorOptions,
   getMetadataStorage,
   validate,
 } from 'class-validator';

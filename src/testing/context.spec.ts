@@ -1,6 +1,6 @@
 import { pino } from 'pino';
 import { ConfigurationReader } from '../configuration/reader.js';
-import { BaseConfiguration, WorkspaceFunction } from '../index.js';
+import { type BaseConfiguration, WorkspaceFunction } from '../index.js';
 import { createContext } from './context.js';
 
 abstract class MyDefinition extends WorkspaceFunction<string> {}

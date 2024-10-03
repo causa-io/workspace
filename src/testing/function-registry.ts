@@ -2,9 +2,9 @@ import { jest } from '@jest/globals';
 import { WorkspaceContext, WorkspaceFunction } from '../context/index.js';
 import {
   FunctionRegistry,
-  ImplementableFunctionArguments,
-  ImplementableFunctionDefinitionConstructor,
-  ImplementableFunctionReturnType,
+  type ImplementableFunctionArguments,
+  type ImplementableFunctionDefinitionConstructor,
+  type ImplementableFunctionReturnType,
 } from '../function-registry/index.js';
 
 /**

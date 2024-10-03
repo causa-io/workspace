@@ -5,10 +5,10 @@ import { join, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import {
   ConfigurationValueNotFoundError,
-  PartialConfiguration,
+  type PartialConfiguration,
 } from '../configuration/index.js';
 import { InvalidFunctionArgumentError } from '../function-registry/index.js';
-import { BaseConfiguration } from './base-configuration.js';
+import type { BaseConfiguration } from './base-configuration.js';
 import { WorkspaceContext } from './context.js';
 import { MyFunction, MyFunctionImpl } from './context.module.test.js';
 import {
