@@ -116,18 +116,19 @@ export class WorkspaceContext {
   }
 
   /**
-   * Lists the additional directories belonging to the current project, based on the `project.additionalDirectories`
-   * configuration.
+   * Lists the external directories belonging to the current project, based on the `project.externalDirectories`
+   * configuration. This only returns directories that match one of the glob patterns, not directories that contain
+   * files matching the patterns.
    *
-   * @returns The list of additional directories that are part of the project.
+   * @returns The list of external directories that are part of the project.
    */
-  async getProjectAdditionalDirectories(): Promise<string[]> {
-    const additionalDirectories = this.get('project.additionalDirectories');
-    if (!additionalDirectories || additionalDirectories.length === 0) {
+  async getProjectExternalDirectories(): Promise<string[]> {
+    const externalFiles = this.get('project.externalFiles');
+    if (!externalFiles || externalFiles.length === 0) {
       return [];
     }
 
-    const additionalPaths = await globby(additionalDirectories, {
+    const additionalPaths = await globby(externalFiles, {
       gitignore: true,
       onlyDirectories: true,
       cwd: this.rootPath,

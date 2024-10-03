@@ -47,13 +47,13 @@ export type BaseConfiguration = {
     readonly language: string;
 
     /**
-     * A list of glob patterns, relative to the **workspace** root, that match directories that are also part of the
-     * project.
-     * This is only needed for directories that are not part of the project root. This is a hint to various processes
-     * (e.g. the continuous integration) that they should also consider these directories when running operations
-     * against the project.
+     * A list of glob patterns, relative to the **workspace** root, that match files or directories that are also part
+     * of the project.
+     * This is only needed for files or directories that are not part of the project root.
+     * This is a hint to various processes (e.g. project changes detection, linting, etc.) that they should also
+     * consider those files and directories when running operations against the project.
      */
-    readonly additionalDirectories?: string[];
+    readonly externalFiles?: string[];
   };
 
   /**

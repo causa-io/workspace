@@ -60,7 +60,7 @@ describe('WorkspaceContext', () => {
         environment: 'dev',
       });
       const actualAdditionalDirectories =
-        await actualContext.getProjectAdditionalDirectories();
+        await actualContext.getProjectExternalDirectories();
 
       expect(actualContext.workingDirectory).toEqual(expectedProjectDir);
       expect(actualContext.rootPath).toEqual(tmpDir);
@@ -111,7 +111,7 @@ describe('WorkspaceContext', () => {
       );
     });
 
-    it('should return project additional directories and not follow symlinks', async () => {
+    it('should return project external directories and not follow symlinks', async () => {
       const workspaceConfiguration: PartialConfiguration<BaseConfiguration> = {
         workspace: { name: 'my-workspace' },
       };
@@ -120,7 +120,7 @@ describe('WorkspaceContext', () => {
           name: 'my-project',
           type: '🐍',
           language: '🇫🇷',
-          additionalDirectories: ['domain/*/sub-path'],
+          externalFiles: ['domain/*/sub-path'],
         },
       };
       await writeConfiguration(tmpDir, './causa.yaml', workspaceConfiguration);
@@ -158,7 +158,7 @@ describe('WorkspaceContext', () => {
         workingDirectory: expectedProjectDir,
       });
       const actualAdditionalDirectories =
-        await actualContext.getProjectAdditionalDirectories();
+        await actualContext.getProjectExternalDirectories();
 
       expect(actualContext.workingDirectory).toEqual(expectedProjectDir);
       expect(actualContext.rootPath).toEqual(tmpDir);
