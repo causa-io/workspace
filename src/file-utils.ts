@@ -1,4 +1,4 @@
-import { Options, globby } from 'globby';
+import { type Options, globby } from 'globby';
 import { template } from 'lodash-es';
 import { join } from 'path';
 

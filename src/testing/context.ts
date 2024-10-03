@@ -1,18 +1,18 @@
 import { resolve } from 'path';
-import { Logger, pino } from 'pino';
+import { type Logger, pino } from 'pino';
 import {
   ConfigurationReader,
   ConfigurationReaderSourceType,
 } from '../configuration/index.js';
 import {
-  BaseConfiguration,
-  ProcessorInstruction,
+  type BaseConfiguration,
+  type ProcessorInstruction,
   WorkspaceContext,
   WorkspaceFunction,
 } from '../context/index.js';
 import {
   FunctionRegistry,
-  ImplementableFunctionImplementationConstructor,
+  type ImplementableFunctionImplementationConstructor,
 } from '../function-registry/index.js';
 
 /**

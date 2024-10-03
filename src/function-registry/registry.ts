@@ -2,10 +2,10 @@ import { plainToInstance } from 'class-transformer';
 import { ValidationError, parseObject } from '../validation/index.js';
 import {
   ImplementableFunction,
-  ImplementableFunctionArguments,
-  ImplementableFunctionDefinitionConstructor,
-  ImplementableFunctionImplementationConstructor,
-  ImplementableFunctionReturnType,
+  type ImplementableFunctionArguments,
+  type ImplementableFunctionDefinitionConstructor,
+  type ImplementableFunctionImplementationConstructor,
+  type ImplementableFunctionReturnType,
 } from './definition.js';
 import {
   FunctionDefinitionDoesNotMatchError,

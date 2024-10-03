@@ -1,4 +1,4 @@
-import { ServiceConstructor } from '../service-cache/index.js';
+import type { ServiceConstructor } from '../service-cache/index.js';
 import { WorkspaceContext } from './context.js';
 
 /**

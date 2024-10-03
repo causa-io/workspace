@@ -5,8 +5,11 @@ import {
   ConfigurationValueNotFoundError,
   UnformattedTemplateValueError,
 } from './errors.js';
-import { AsyncTemplateRenderer, DataFetchers } from './template-renderer.js';
-export { GetFieldType } from 'lodash';
+import {
+  AsyncTemplateRenderer,
+  type DataFetchers,
+} from './template-renderer.js';
+export type { GetFieldType } from 'lodash';
 
 /**
  * The default key in configuration objects marking a value as being a template that should be evaluated.

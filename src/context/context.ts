@@ -1,19 +1,19 @@
 import { globby } from 'globby';
 import { join, resolve } from 'path';
-import { Logger, pino } from 'pino';
-import { GetFieldType } from '../configuration/index.js';
+import { type Logger, pino } from 'pino';
+import type { GetFieldType } from '../configuration/index.js';
 import {
   FunctionRegistry,
-  ImplementableFunctionArguments,
-  ImplementableFunctionDefinitionConstructor,
-  ImplementableFunctionReturnType,
+  type ImplementableFunctionArguments,
+  type ImplementableFunctionDefinitionConstructor,
+  type ImplementableFunctionReturnType,
   NoImplementationFoundError,
 } from '../function-registry/index.js';
 import { ServiceCache } from '../service-cache/index.js';
-import { BaseConfiguration } from './base-configuration.js';
+import type { BaseConfiguration } from './base-configuration.js';
 import {
-  TypedWorkspaceConfiguration,
-  WorkspaceConfiguration,
+  type TypedWorkspaceConfiguration,
+  type WorkspaceConfiguration,
   listProjectPaths,
   loadWorkspaceConfiguration,
   makeProcessorConfiguration,
@@ -28,9 +28,12 @@ import {
 } from './errors.js';
 import { WorkspaceFunction } from './functions.js';
 import { loadModules } from './modules.js';
-import { ProcessorInstruction, ProcessorResult } from './processor.js';
+import {
+  type ProcessorInstruction,
+  type ProcessorResult,
+} from './processor.js';
 import { SecretFetch } from './secrets.js';
-import { WorkspaceServiceConstructor } from './services.js';
+import type { WorkspaceServiceConstructor } from './services.js';
 
 /**
  * Options when initializing or cloning a {@link WorkspaceContext}.

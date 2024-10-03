@@ -1,6 +1,6 @@
 import { WorkspaceContext } from './context.js';
 import { WorkspaceFunction } from './functions.js';
-import { ModuleRegistrationFunction } from './modules.js';
+import type { ModuleRegistrationFunction } from './modules.js';
 
 type MyConfiguration = {
   myFunction?: {

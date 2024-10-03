@@ -2,14 +2,14 @@ import { mkdtemp, rm, symlink } from 'fs/promises';
 import 'jest-extended';
 import { tmpdir } from 'os';
 import { join, resolve } from 'path';
-import { Logger, pino } from 'pino';
+import { type Logger, pino } from 'pino';
 import {
   ConfigurationReader,
   ConfigurationReaderSourceType,
   ConfigurationValueNotFoundError,
-  PartialConfiguration,
+  type PartialConfiguration,
 } from '../configuration/index.js';
-import { BaseConfiguration } from './base-configuration.js';
+import type { BaseConfiguration } from './base-configuration.js';
 import {
   WorkspaceConfigurationSourceType,
   listProjectPaths,

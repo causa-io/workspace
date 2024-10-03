@@ -1,14 +1,14 @@
 import { readFile } from 'fs/promises';
 import { dirname } from 'path';
-import { Logger } from 'pino';
+import type { Logger } from 'pino';
 import resolvePackagePath from 'resolve-package-path';
 import { satisfies, validRange } from 'semver';
 import { fileURLToPath } from 'url';
 import {
   FunctionRegistry,
-  ImplementableFunctionImplementationConstructor,
+  type ImplementableFunctionImplementationConstructor,
 } from '../function-registry/index.js';
-import { WorkspaceConfiguration } from './configuration.js';
+import type { WorkspaceConfiguration } from './configuration.js';
 import { WorkspaceContext } from './context.js';
 import {
   IncompatibleModuleVersionError,

@@ -1,7 +1,7 @@
 import { mkdtemp, readFile, rm, stat } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { Logger, pino } from 'pino';
+import { type Logger, pino } from 'pino';
 import { ModuleInstallationError } from './errors.js';
 import { setUpCausaFolder } from './installation.js';
 

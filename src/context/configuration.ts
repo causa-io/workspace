@@ -3,15 +3,15 @@ import { globby } from 'globby';
 import { load } from 'js-yaml';
 import { get } from 'lodash-es';
 import { dirname, join } from 'path';
-import { Logger } from 'pino';
+import type { Logger } from 'pino';
 import {
   ConfigurationReader,
   ConfigurationReaderSourceType,
-  GetFieldType,
-  PartialConfiguration,
-  RawConfiguration,
+  type GetFieldType,
+  type PartialConfiguration,
+  type RawConfiguration,
 } from '../configuration/index.js';
-import { BaseConfiguration } from './base-configuration.js';
+import type { BaseConfiguration } from './base-configuration.js';
 import { InvalidWorkspaceConfigurationFilesError } from './errors.js';
 
 /**
