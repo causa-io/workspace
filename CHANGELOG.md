@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.16.0 (2024-10-07)
+
 Breaking changes:
 
 - Rename the `project.additionalDirectories` configuration to `project.externalFiles`.
