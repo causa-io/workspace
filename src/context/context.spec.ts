@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, symlink } from 'fs/promises';
+import { mkdir, mkdtemp, rm, symlink, writeFile } from 'fs/promises';
 import 'jest-extended';
 import { tmpdir } from 'os';
 import { join, resolve } from 'path';
@@ -59,8 +59,7 @@ describe('WorkspaceContext', () => {
         workingDirectory: expectedProjectDir,
         environment: 'dev',
       });
-      const actualAdditionalDirectories =
-        await actualContext.getProjectAdditionalDirectories();
+      const actualExternalPaths = await actualContext.getProjectExternalPaths();
 
       expect(actualContext.workingDirectory).toEqual(expectedProjectDir);
       expect(actualContext.rootPath).toEqual(tmpDir);
@@ -87,7 +86,7 @@ describe('WorkspaceContext', () => {
         },
         myService: { myValue: '🎉' },
       });
-      expect(actualAdditionalDirectories).toBeEmpty();
+      expect(actualExternalPaths).toBeEmpty();
     });
 
     it('should throw when the project and environment are not set', async () => {
@@ -110,8 +109,10 @@ describe('WorkspaceContext', () => {
         EnvironmentNotSetError,
       );
     });
+  });
 
-    it('should return project additional directories and not follow symlinks', async () => {
+  describe('getProjectExternalPaths', () => {
+    it('should return project external directories and not follow symlinks', async () => {
       const workspaceConfiguration: PartialConfiguration<BaseConfiguration> = {
         workspace: { name: 'my-workspace' },
       };
@@ -120,7 +121,7 @@ describe('WorkspaceContext', () => {
           name: 'my-project',
           type: '🐍',
           language: '🇫🇷',
-          additionalDirectories: ['domain/*/sub-path'],
+          externalFiles: ['domain/*/sub-path'],
         },
       };
       await writeConfiguration(tmpDir, './causa.yaml', workspaceConfiguration);
@@ -129,43 +130,65 @@ describe('WorkspaceContext', () => {
         './project/causa.yaml',
         projectConfiguration,
       );
-      const firstAdditionalDir = join(
-        tmpDir,
-        'domain',
-        'my-domain',
-        'sub-path',
-      );
-      const secondAdditionalDir = join(
+      const firstExternalDir = join(tmpDir, 'domain', 'my-domain', 'sub-path');
+      const secondExternalDir = join(
         tmpDir,
         'domain',
         'other-domain',
         'sub-path',
       );
-      await mkdir(join(firstAdditionalDir, 'some-dir'), { recursive: true });
-      await mkdir(secondAdditionalDir, { recursive: true });
+      await mkdir(join(firstExternalDir, 'some-dir'), { recursive: true });
+      await mkdir(secondExternalDir, { recursive: true });
       await mkdir(join(tmpDir, 'nope'), { recursive: true });
       await symlink(
         join(tmpDir, 'domain', 'my-domain'),
         join(tmpDir, 'domain', 'symlink'),
       );
       const expectedProjectDir = join(tmpDir, 'project');
-      const expectedAdditionalDirectories = [
-        firstAdditionalDir,
-        secondAdditionalDir,
-      ];
+      const expectedExternalPaths = [firstExternalDir, secondExternalDir];
 
       const actualContext = await WorkspaceContext.init({
         workingDirectory: expectedProjectDir,
       });
-      const actualAdditionalDirectories =
-        await actualContext.getProjectAdditionalDirectories();
+      const actualExternalPaths = await actualContext.getProjectExternalPaths({
+        onlyDirectories: true,
+      });
 
-      expect(actualContext.workingDirectory).toEqual(expectedProjectDir);
-      expect(actualContext.rootPath).toEqual(tmpDir);
-      expect(actualContext.projectPath).toEqual(expectedProjectDir);
-      expect(actualAdditionalDirectories).toContainAllValues(
-        expectedAdditionalDirectories,
+      expect(actualExternalPaths).toContainAllValues(expectedExternalPaths);
+    });
+
+    it('should return project external files and directories', async () => {
+      const workspaceConfiguration: PartialConfiguration<BaseConfiguration> = {
+        workspace: { name: 'my-workspace' },
+      };
+      const projectConfiguration: PartialConfiguration<BaseConfiguration> = {
+        project: {
+          name: 'my-project',
+          type: '🐍',
+          language: '🇫🇷',
+          externalFiles: ['dir1', 'file1.*'],
+        },
+      };
+      await writeConfiguration(tmpDir, './causa.yaml', workspaceConfiguration);
+      await writeConfiguration(
+        tmpDir,
+        './project/causa.yaml',
+        projectConfiguration,
       );
+      const externalDir = join(tmpDir, 'dir1');
+      await mkdir(externalDir, { recursive: true });
+      await mkdir(join(tmpDir, 'nope'), { recursive: true });
+      const externalFile = join(tmpDir, 'file1.txt');
+      await writeFile(externalFile, '🎉');
+      const workingDirectory = join(tmpDir, 'project');
+      const expectedExternalPaths = [externalDir, externalFile];
+
+      const actualContext = await WorkspaceContext.init({ workingDirectory });
+      const actualExternalPaths = await actualContext.getProjectExternalPaths({
+        onlyFiles: false,
+      });
+
+      expect(actualExternalPaths).toContainAllValues(expectedExternalPaths);
     });
   });
 

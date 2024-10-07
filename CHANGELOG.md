@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+Breaking changes:
+
+- Rename the `project.additionalDirectories` configuration to `project.externalFiles`.
+- Rename `WorkspaceContext.getProjectAdditionalDirectories` to `getProjectExternalPaths` to handle files and / or directories.
+
 ## v0.15.0 (2024-05-27)
 
 Breaking changes:

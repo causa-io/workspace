@@ -1,5 +1,5 @@
-import { globby } from 'globby';
-import { join, resolve } from 'path';
+import { globby, type Options } from 'globby';
+import { resolve } from 'path';
 import { type Logger, pino } from 'pino';
 import type { GetFieldType } from '../configuration/index.js';
 import {
@@ -12,11 +12,11 @@ import {
 import { ServiceCache } from '../service-cache/index.js';
 import type { BaseConfiguration } from './base-configuration.js';
 import {
-  type TypedWorkspaceConfiguration,
-  type WorkspaceConfiguration,
   listProjectPaths,
   loadWorkspaceConfiguration,
   makeProcessorConfiguration,
+  type TypedWorkspaceConfiguration,
+  type WorkspaceConfiguration,
 } from './configuration.js';
 import {
   ContextNotAProjectError,
@@ -116,31 +116,35 @@ export class WorkspaceContext {
   }
 
   /**
-   * Lists the additional directories belonging to the current project, based on the `project.additionalDirectories`
+   * Lists the external files or directories belonging to the current project, based on the `project.externalFiles`
    * configuration.
    *
-   * @returns The list of additional directories that are part of the project.
+   * @param options Options to filter the results. By default, only files are returned.
+   * @returns The list of external directories that are part of the project.
    */
-  async getProjectAdditionalDirectories(): Promise<string[]> {
-    const additionalDirectories = this.get('project.additionalDirectories');
-    if (!additionalDirectories || additionalDirectories.length === 0) {
+  async getProjectExternalPaths(
+    options: Pick<Options, 'onlyDirectories' | 'onlyFiles'> = {},
+  ): Promise<string[]> {
+    const externalFiles = this.get('project.externalFiles');
+    if (!externalFiles || externalFiles.length === 0) {
       return [];
     }
 
-    const additionalPaths = await globby(additionalDirectories, {
+    const externalPaths = await globby(externalFiles, {
       gitignore: true,
-      onlyDirectories: true,
       cwd: this.rootPath,
       followSymbolicLinks: false,
+      absolute: true,
+      ...options,
     });
 
     this.logger.debug(
-      `📂 Found additional directories for the project in the configuration: ${additionalPaths
+      `📂 Found external paths for the project in the configuration: ${externalPaths
         .map((p) => `'${p}'`)
         .join(', ')}.`,
     );
 
-    return additionalPaths.map((p) => join(this.rootPath, p));
+    return externalPaths;
   }
 
   /**
