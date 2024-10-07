@@ -117,8 +117,8 @@ describe('FunctionRegistry', () => {
 
     it('should throw an error if the class does not implement a definition', () => {
       class Nope {
-        _call(): any {} // eslint-disable-line @typescript-eslint/no-empty-function
-        _supports(): any {} // eslint-disable-line @typescript-eslint/no-empty-function
+        _call(): any {}
+        _supports(): any {}
       }
 
       expect(() => registry.getDefinitionForImplementation(Nope)).toThrow(
