@@ -154,7 +154,7 @@ describe('WorkspaceContext', () => {
         onlyDirectories: true,
       });
 
-      expect(actualExternalPaths).toContainAllValues(expectedExternalPaths);
+      expect(actualExternalPaths).toIncludeSameMembers(expectedExternalPaths);
     });
 
     it('should return project external files and directories', async () => {
@@ -188,7 +188,7 @@ describe('WorkspaceContext', () => {
         onlyFiles: false,
       });
 
-      expect(actualExternalPaths).toContainAllValues(expectedExternalPaths);
+      expect(actualExternalPaths).toIncludeSameMembers(expectedExternalPaths);
     });
   });
 
@@ -209,7 +209,7 @@ describe('WorkspaceContext', () => {
 
       const actualProjectPaths = await context.listProjectPaths();
 
-      expect(actualProjectPaths).toContainAllValues([
+      expect(actualProjectPaths).toIncludeSameMembers([
         join(tmpDir, 'project'),
         join(tmpDir, 'project2'),
       ]);
@@ -578,9 +578,7 @@ describe('WorkspaceContext', () => {
     it('should rethrow the error when a secret definition is invalid', async () => {
       const actualPromise = context.secret('invalidDefinition');
 
-      await expect(actualPromise).rejects.toThrowError(
-        InvalidSecretDefinitionError,
-      );
+      await expect(actualPromise).rejects.toThrow(InvalidSecretDefinitionError);
       await expect(actualPromise).rejects.toMatchObject({
         secretId: 'invalidDefinition',
       });
@@ -589,9 +587,7 @@ describe('WorkspaceContext', () => {
     it('should throw when no implementation exists for the backend', async () => {
       const actualPromise = context.secret('unknownBackend');
 
-      await expect(actualPromise).rejects.toThrowError(
-        SecretBackendNotFoundError,
-      );
+      await expect(actualPromise).rejects.toThrow(SecretBackendNotFoundError);
     });
 
     it('should throw when the backend is not specified', async () => {

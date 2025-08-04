@@ -69,7 +69,7 @@ describe('installation', () => {
       logger,
     );
 
-    await expect(actualPromise).rejects.toThrowError(ModuleInstallationError);
+    await expect(actualPromise).rejects.toThrow(ModuleInstallationError);
     const actualPackageFile = await readFile(
       join(tmpDir, '.causa', 'package.json'),
     );

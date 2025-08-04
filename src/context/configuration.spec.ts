@@ -263,7 +263,7 @@ describe('configuration', () => {
 
       const actualPaths = await listProjectPaths(tmpDir);
 
-      expect(actualPaths).toContainAllValues([
+      expect(actualPaths).toIncludeSameMembers([
         join(tmpDir, 'project1'),
         join(tmpDir, 'project2'),
       ]);
