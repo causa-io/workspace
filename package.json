@@ -2,7 +2,10 @@
   "name": "@causa/workspace",
   "version": "0.16.1",
   "description": "Provides the base functionalities for a workspace: configuration loading and registering functions.",
-  "repository": "github:causa-io/workspace",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/causa-io/workspace.git"
+  },
   "license": "ISC",
   "type": "module",
   "engines": {
