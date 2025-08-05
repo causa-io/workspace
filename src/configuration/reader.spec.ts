@@ -147,6 +147,22 @@ describe('ConfigurationReader', () => {
         ConfigurationValueNotFoundError,
       );
     });
+
+    it('should not throw an error when unsafe option is true', () => {
+      const readerWithTemplate = reader.mergedWith({
+        sourceType: ConfigurationReaderSourceType.File,
+        source: 'template-file.json',
+        configuration: {
+          setting1: { [TEMPLATE_KEY]: 'some template' } as any,
+        },
+      });
+
+      const actualValue = readerWithTemplate.getOrThrow('setting1', {
+        unsafe: true,
+      });
+
+      expect(actualValue).toEqual({ [TEMPLATE_KEY]: 'some template' });
+    });
   });
 
   describe('getAndRender', () => {
