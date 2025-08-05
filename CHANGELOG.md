@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.18.0 (2025-08-05)
+
 Features:
 
 - Support `ConfigurationGetOptions` in `ConfigurationReader.getOrThrow`.
