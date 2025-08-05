@@ -1,7 +1,10 @@
 import { globby, type Options } from 'globby';
 import { resolve } from 'path';
 import { type Logger, pino } from 'pino';
-import type { GetFieldType } from '../configuration/index.js';
+import type {
+  ConfigurationGetOptions,
+  GetFieldType,
+} from '../configuration/index.js';
 import {
   FunctionRegistry,
   type ImplementableFunctionArguments,
@@ -174,34 +177,42 @@ export class WorkspaceContext {
   /**
    * Returns the entire configuration for the current context.
    *
+   * @param options Optional options for the get operation.
    * @returns The configuration.
    */
-  get(): BaseConfiguration;
+  get(options?: ConfigurationGetOptions): BaseConfiguration;
 
   /**
    * Returns the value at a given path in the configuration.
    *
    * @param path The path to the value in the configuration object.
+   * @param options Optional options for the get operation.
    * @returns The value, or `undefined` if the path does not exist.
    */
   get<TPath extends string>(
     path: TPath,
+    options?: ConfigurationGetOptions,
   ): GetFieldType<BaseConfiguration, TPath>;
 
-  get(path?: string): any {
-    return this.configuration.get(path as any);
+  get(
+    pathOrOptions?: string | ConfigurationGetOptions,
+    options?: ConfigurationGetOptions,
+  ): any {
+    return this.configuration.get(pathOrOptions as any, options);
   }
 
   /**
    * Returns the value at a given path in the configuration, or throws an error if the path does not exist.
    *
    * @param path The path to the value in the configuration object.
+   * @param options Optional options for the get operation.
    * @returns The value in the configuration.
    */
   getOrThrow<TPath extends string>(
     path: TPath,
+    options?: ConfigurationGetOptions,
   ): Exclude<GetFieldType<BaseConfiguration, TPath>, undefined> {
-    return this.configuration.getOrThrow(path);
+    return this.configuration.getOrThrow(path, options);
   }
 
   /**
