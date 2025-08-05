@@ -6,6 +6,10 @@ Breaking changes:
 
 - Upgrade the minimum Node.js version to `20`.
 
+Features:
+
+- Support the `unsafe` option for `ConfigurationReader.get`.
+
 ## v0.16.1 (2025-03-17)
 
 Chore:
