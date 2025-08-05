@@ -7,6 +7,7 @@ import type { Logger } from 'pino';
 import {
   ConfigurationReader,
   ConfigurationReaderSourceType,
+  type ConfigurationGetOptions,
   type GetFieldType,
   type PartialConfiguration,
   type RawConfiguration,
@@ -297,11 +298,12 @@ export type TypedWorkspaceConfiguration<C extends object> = {
    * Returns the value at a given path in the configuration.
    *
    * @param path The path to the value in the configuration object.
-   *  If the path is not specified, the whole configuration is returned.
+   * @param options Optional options for the get operation.
    * @returns The value, or `undefined` if the path does not exist.
    */
   get: (<TPath extends string>(
     path: TPath,
+    options?: ConfigurationGetOptions,
   ) => GetFieldType<BaseConfiguration & C, TPath>) &
     (() => BaseConfiguration & C);
 
@@ -309,10 +311,12 @@ export type TypedWorkspaceConfiguration<C extends object> = {
    * Returns the value at a given path in the configuration, or throws an error if the path does not exist.
    *
    * @param path The path to the value in the configuration object.
+   * @param options Optional options for the get operation.
    * @returns The value in the configuration.
    */
   getOrThrow: <TPath extends string>(
     path: TPath,
+    options?: ConfigurationGetOptions,
   ) => Exclude<GetFieldType<BaseConfiguration & C, TPath>, undefined>;
 
   /**
