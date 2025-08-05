@@ -17,6 +17,16 @@ export type { GetFieldType } from 'lodash';
 const DEFAULT_TEMPLATE_KEY = '$format';
 
 /**
+ * Options for the {@link ConfigurationReader.get} method.
+ */
+export type ConfigurationGetOptions = {
+  /**
+   * When set to `true`, bypasses the check for unformatted template values.
+   */
+  unsafe?: boolean;
+};
+
+/**
  * The types of source supported by the base {@link ConfigurationReader}.
  */
 export enum ConfigurationReaderSourceType {
@@ -187,9 +197,10 @@ export class ConfigurationReader<T extends object> {
    * This throws an {@link UnformattedTemplateValueError} if the returned configuration contains formatting / rendering
    * instructions. To ensure those are processed, call {@link ConfigurationReader.getAndRender} instead.
    *
+   * @param options Optional options for the get operation.
    * @returns The configuration.
    */
-  get(): T;
+  get(options?: ConfigurationGetOptions): T;
 
   /**
    * Returns the value at a given path in the configuration object.
@@ -197,14 +208,31 @@ export class ConfigurationReader<T extends object> {
    * instructions. To ensure those are processed, call {@link ConfigurationReader.getAndRender} instead.
    *
    * @param path The path to the value in the configuration object.
+   * @param options Optional options for the get operation.
    * @returns The value, or `undefined` if the path does not exist.
    */
-  get<TPath extends string>(path: TPath): GetFieldType<T, TPath>;
+  get<TPath extends string>(
+    path: TPath,
+    options?: ConfigurationGetOptions,
+  ): GetFieldType<T, TPath>;
 
-  get(path?: string): any {
+  get(
+    pathOrOptions?: string | ConfigurationGetOptions,
+    options?: ConfigurationGetOptions,
+  ): any {
+    let path: string | undefined;
+
+    if (typeof pathOrOptions === 'string') {
+      path = pathOrOptions;
+      options ??= {};
+    } else if (typeof pathOrOptions === 'object') {
+      options = pathOrOptions ?? {};
+    }
+
     const value = this.unsafeGet(path);
 
     if (
+      !options?.unsafe &&
       AsyncTemplateRenderer.containsRenderingObject(this.templateKey, value)
     ) {
       throw new UnformattedTemplateValueError(path ?? '.');
