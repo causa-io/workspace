@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+Features:
+
+- Support `ConfigurationGetOptions` in `ConfigurationReader.getOrThrow`.
+- Expose `ConfigurationGetOptions` in `WorkspaceContext` configuration methods.
+
 ## v0.17.0 (2025-08-05)
 
 Breaking changes:
