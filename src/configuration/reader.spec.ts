@@ -99,6 +99,40 @@ describe('ConfigurationReader', () => {
         UnformattedTemplateValueError,
       );
     });
+
+    it('should not throw an error when unsafe option is true for full configuration', () => {
+      const readerWithTemplate = reader.mergedWith({
+        sourceType: ConfigurationReaderSourceType.File,
+        source: 'template-file.json',
+        configuration: {
+          setting1: { [TEMPLATE_KEY]: 'some template' } as any,
+        },
+      });
+
+      const actualConfiguration = readerWithTemplate.get({ unsafe: true });
+
+      expect(actualConfiguration).toEqual({
+        setting1: { [TEMPLATE_KEY]: 'some template' },
+        nested: {
+          setting2: ['array value'],
+          setting3: 'value for setting3',
+        },
+      });
+    });
+
+    it('should not throw an error when unsafe option is true for a path', () => {
+      const readerWithTemplate = reader.mergedWith({
+        sourceType: ConfigurationReaderSourceType.File,
+        source: 'template-file.json',
+        configuration: {
+          setting1: { [TEMPLATE_KEY]: 'some template' } as any,
+        },
+      });
+
+      const actualValue = readerWithTemplate.get('setting1', { unsafe: true });
+
+      expect(actualValue).toEqual({ [TEMPLATE_KEY]: 'some template' });
+    });
   });
 
   describe('getOrThrow', () => {
