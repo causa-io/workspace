@@ -631,6 +631,18 @@ describe('WorkspaceContext', () => {
       });
       expect(actualValue).toEqual(actualValue2);
     });
+
+    it('should not render secrets when requested', async () => {
+      const actualValue = (await context.getAndRender('someValue', {
+        renderSecrets: false,
+      })) as unknown as string;
+      const actualValue2 = (await context.getAndRenderOrThrow('someValue', {
+        renderSecrets: false,
+      })) as unknown as string;
+
+      expect(actualValue).toEqual('🎉');
+      expect(actualValue2).toEqual('🎉');
+    });
   });
 
   describe('processors', () => {

@@ -67,6 +67,17 @@ export type WorkspaceContextOptions = {
 };
 
 /**
+ * Options for {@link WorkspaceContext.getAndRender} and related methods.
+ */
+export type GetAndRenderOptions = {
+  /**
+   * Whether to render secrets in the output. If `false`, secrets will be replaced with an empty string.
+   * Defaults to `true`.
+   */
+  readonly renderSecrets?: boolean;
+};
+
+/**
  * A context specific to a workspace, containing its configuration and exposing available tooling for it.
  */
 export class WorkspaceContext {
@@ -218,24 +229,34 @@ export class WorkspaceContext {
   /**
    * Returns the entire configuration for the current context, after rendering all templates.
    *
+   * @param options Options for rendering.
    * @returns The rendered configuration.
    */
-  getAndRender(): Promise<BaseConfiguration>;
+  getAndRender(options?: GetAndRenderOptions): Promise<BaseConfiguration>;
 
   /**
    * Renders the value at a given path in the configuration object, by recursively walking the value and processing
    * templates.
    *
    * @param path The path to the value in the configuration object.
+   * @param options Options for rendering.
    * @returns The value after rendering.
    */
   getAndRender<TPath extends string>(
     path: TPath,
+    options?: GetAndRenderOptions,
   ): Promise<GetFieldType<BaseConfiguration, TPath>>;
 
-  async getAndRender(path?: string): Promise<any> {
+  async getAndRender(
+    pathOrOptions?: string | GetAndRenderOptions,
+    options?: GetAndRenderOptions,
+  ): Promise<any> {
+    const path = typeof pathOrOptions === 'string' ? pathOrOptions : undefined;
+    options ??= typeof pathOrOptions === 'object' ? pathOrOptions : {};
+    const { renderSecrets = true } = options;
+
     return await this.configuration.getAndRender(
-      { secret: (secretId: string) => this.secret(secretId) },
+      { secret: async (id: string) => (renderSecrets ? this.secret(id) : '') },
       path as any,
     );
   }
@@ -245,13 +266,17 @@ export class WorkspaceContext {
    * templates. If the value does not exist in the configuration, this throws an error instead of returning `undefined`.
    *
    * @param path The path to the value in the configuration object.
+   * @param options Options for rendering.
    * @returns The value after rendering.
    */
   async getAndRenderOrThrow<TPath extends string>(
     path: TPath,
+    options: GetAndRenderOptions = {},
   ): Promise<Exclude<GetFieldType<BaseConfiguration, TPath>, undefined>> {
+    const { renderSecrets = true } = options;
+
     return await this.configuration.getAndRenderOrThrow(
-      { secret: (secretId: string) => this.secret(secretId) },
+      { secret: async (id: string) => (renderSecrets ? this.secret(id) : '') },
       path,
     );
   }
