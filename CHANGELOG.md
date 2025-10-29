@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+Features:
+
+- Add the `renderSecrets` option to `WorkspaceContext.getAndRender`.
+
 ## v0.18.1 (2025-10-20)
 
 Chore:
