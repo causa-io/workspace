@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.19.1 (2026-01-13)
+
 Fixes:
 
 - Make `listFilesAndFormat` work with group-less regular expressions.
