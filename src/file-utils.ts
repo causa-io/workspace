@@ -60,12 +60,12 @@ export async function listFilesAndFormat(
 
   return paths.sort().flatMap((path) => {
     const match = path.match(regExp);
-    if (!match || !match.groups) {
+    if (!match) {
       if (nonMatchingPathHandler) nonMatchingPathHandler(path);
       return [];
     }
 
-    const formatParts = match.groups;
+    const formatParts = match.groups ?? {};
     const filePath = join(rootPath, path);
     const rendered = render(formatParts);
 
