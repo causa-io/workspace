@@ -83,5 +83,31 @@ describe('file-utils', () => {
         'allowed1/second.oopsAgain',
       ]);
     });
+
+    it('should work with a regular expression without named groups', async () => {
+      await mkdir(join(tmpDir, 'allowed1'), { recursive: true });
+      await writeFile(join(tmpDir, 'allowed1/first.test'), '🎁');
+      await writeFile(join(tmpDir, 'allowed1/second.test'), '🎁');
+
+      const actualMatches = await listFilesAndFormat(
+        ['allowed1/**/*.test'],
+        /^allowed1\/\w+\.test$/,
+        'constant',
+        tmpDir,
+      );
+
+      expect(actualMatches).toEqual([
+        {
+          rendered: 'constant',
+          formatParts: {},
+          filePath: join(tmpDir, 'allowed1/first.test'),
+        },
+        {
+          rendered: 'constant',
+          formatParts: {},
+          filePath: join(tmpDir, 'allowed1/second.test'),
+        },
+      ]);
+    });
   });
 });
