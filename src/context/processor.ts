@@ -31,5 +31,6 @@ export type ProcessorResult = {
  * Its return value should contain a configuration object that will be merged into the workspace configuration.
  */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface ProcessorFunction
-  extends WorkspaceFunction<Promise<ProcessorResult>> {}
+export interface ProcessorFunction extends WorkspaceFunction<
+  Promise<ProcessorResult>
+> {}
