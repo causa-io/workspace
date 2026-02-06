@@ -5,6 +5,7 @@ export type {
   TypedWorkspaceConfiguration,
 } from './configuration.js';
 export { WorkspaceContext } from './context.js';
+export { callDeferred } from './defer.js';
 export * from './errors.js';
 export { WorkspaceFunction } from './functions.js';
 export type {
