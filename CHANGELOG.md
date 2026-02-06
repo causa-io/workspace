@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+Features:
+
+- Provide the `callDeferred` utility.
+
 ## v0.19.2 (2026-02-06)
 
 Chore:
