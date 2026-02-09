@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+Breaking changes:
+
+- `project.name`, `project.type`, `project.language`, and `environments[*].name` are now optional in the `BaseConfiguration`.
+
+Features:
+
+- Provide the JSONSchema file for the base configuration (through `BASE_CONFIGURATION_SCHEMA_PATH`).
+
 ## v0.20.0 (2026-02-06)
 
 Features:
