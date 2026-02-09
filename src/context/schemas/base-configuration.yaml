@@ -1,0 +1,115 @@
+# yaml-language-server: $schema=https://json-schema.org/draft-07/schema
+
+title: BaseConfigurationSchema
+type: object
+description: The schema for core elements of the configuration.
+required:
+  - version
+properties:
+  version:
+    type: integer
+    description: The version number for the used configuration schema.
+
+  workspace:
+    title: Workspace
+    type: object
+    description: |-
+      Information about the workspace.
+      The file defining `workspace.name` should be located at the root of the workspace.
+      Its location will be used to determine the root path.
+    properties:
+      name:
+        type: string
+        description: |-
+          The name of the workspace.
+          Depending of the size, it could be the name of the company, or the overarching project.
+
+      description:
+        type: string
+        description: A description for the workspace.
+
+  project:
+    title: Project
+    type: object
+    description: |-
+      Information about the project within the workspace.
+      The file defining `project.name` should be located at the root of the project.
+      Its location will be used to determine the project path.
+    properties:
+      name:
+        type: string
+        description: The name of the project.
+
+      type:
+        type: string
+        description: The type of project.
+
+      language:
+        type: string
+        description: The programming language for the project.
+
+      externalFiles:
+        type: array
+        items:
+          type: string
+        description: |-
+          A list of glob patterns, relative to the workspace root, that match files or directories that are also part
+          of the project.
+          This is only needed for files or directories that are not part of the project root.
+          This is a hint to various processes (e.g. project changes detection, linting, etc.) that they should also
+          consider those files and directories when running operations against the project.
+
+  causa:
+    title: Causa
+    type: object
+    description: Configuration for the CLI itself.
+    properties:
+      modules:
+        type: object
+        additionalProperties:
+          type: string
+        description: |-
+          The modules to load when the CLI runs.
+          Keys are the names of the modules (npm packages) and values are semver versions.
+          Local paths are also accepted. Relative paths will be resolved from the workspace root.
+
+      secrets:
+        title: CausaSecrets
+        type: object
+        description: Generic configuration for secrets.
+        properties:
+          defaultBackend:
+            type: string
+            description: The ID of the default backend to use when fetching secrets, if none is specified.
+
+  secrets:
+    type: object
+    description: |-
+      A map where keys are secret IDs and values are the corresponding configurations.
+      The configuration may contain fields that are specific to the referenced backend.
+    additionalProperties:
+      title: SecretConfiguration
+      type: object
+      properties:
+        backend:
+          type: string
+          description: |-
+            The ID of the backend to use when fetching the secret.
+            Defaults to `causa.secrets.defaultBackend`.
+
+  environments:
+    type: object
+    description: A map where keys are environment IDs and values provide details about each environment.
+    additionalProperties:
+      title: EnvironmentConfiguration
+      type: object
+      properties:
+        name:
+          type: string
+          description: The full displayable name for the environment.
+
+        configuration:
+          type: object
+          description: |-
+            Additional configuration that will be merged with the main one before running operations against the
+            environment.
