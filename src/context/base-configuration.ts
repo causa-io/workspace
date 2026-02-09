@@ -1,4 +1,4 @@
-import { resolve } from 'path';
+import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import type { BaseConfigurationSchema, Workspace } from './generated.js';
 
@@ -6,7 +6,7 @@ import type { BaseConfigurationSchema, Workspace } from './generated.js';
  * The path to the JSON Schema file defining the base configuration.
  */
 export const BASE_CONFIGURATION_SCHEMA_PATH = resolve(
-  fileURLToPath(import.meta.url),
+  dirname(fileURLToPath(import.meta.url)),
   './schemas/base-configuration.yaml',
 );
 
