@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.21.0 (2026-02-09)
+
 Breaking changes:
 
 - `project.name`, `project.type`, `project.language`, and `environments[*].name` are now optional in the `BaseConfiguration`.
