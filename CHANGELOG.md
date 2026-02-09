@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.21.1 (2026-02-09)
+
 Fixes:
 
 - Remove source file name from configuration schema path.
