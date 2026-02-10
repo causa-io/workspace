@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+Features:
+
+- Add the `project.description` to the configuration schema.
+
 ## v0.21.1 (2026-02-09)
 
 Fixes:
