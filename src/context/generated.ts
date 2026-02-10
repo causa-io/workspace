@@ -78,6 +78,13 @@ export class Project {
   }
 
   /**
+   * A description for the project.
+   */
+  @AllowMissing()
+  @IsString()
+  readonly description?: string;
+
+  /**
    * A list of glob patterns, relative to the workspace root, that match files or directories that are also part
    * of the project.
    * This is only needed for files or directories that are not part of the project root.
