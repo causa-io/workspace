@@ -466,6 +466,16 @@ describe('WorkspaceContext', () => {
       expect(actualDefinitions).toEqual([MyFunction]);
     });
 
+    it('should call all function implementations', async () => {
+      const context = await WorkspaceContext.init({
+        workingDirectory: tmpDir,
+      });
+
+      const actualResults = context.callAll(MyFunction, {});
+
+      expect(actualResults).toEqual(['🎉']);
+    });
+
     it('should return function implementations', async () => {
       const context = await WorkspaceContext.init({
         workingDirectory: tmpDir,
