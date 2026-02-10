@@ -306,6 +306,21 @@ export class WorkspaceContext {
   }
 
   /**
+   * Looks up a function definition and calls all corresponding implementations that support this context, returning
+   * the results as an array.
+   *
+   * @param definition The constructor of the abstract class defining the function.
+   * @param args Arguments to pass to the function.
+   * @returns The results of the function calls.
+   */
+  callAll<D extends WorkspaceFunction<any>>(
+    definition: ImplementableFunctionDefinitionConstructor<D>,
+    args: ImplementableFunctionArguments<D>,
+  ): ImplementableFunctionReturnType<D>[] {
+    return this.functionRegistry.callAll(definition, args, this);
+  }
+
+  /**
    * Looks up a function definition using its name (i.e. the name of the class / constructor), validates the passed
    * arguments, and calls the function implementation.
    * Unlike {@link WorkspaceContext.call}, arguments are fully validated using

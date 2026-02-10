@@ -210,6 +210,16 @@ describe('FunctionRegistry', () => {
     });
   });
 
+  describe('callAll', () => {
+    it('should call all matching implementations and return results as an array', () => {
+      registry.registerImplementations(MyImpl1, MyImpl2);
+
+      const actualResults = registry.callAll(MyDef, { arg: '🎉' }, {});
+
+      expect(actualResults).toIncludeSameMembers(['1️⃣', '️2️⃣']);
+    });
+  });
+
   describe('validateArguments', () => {
     it('should validate arguments', async () => {
       registry.registerImplementations(MyImpl1);

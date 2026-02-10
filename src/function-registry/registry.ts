@@ -216,6 +216,25 @@ export class FunctionRegistry<C extends object> {
   }
 
   /**
+   * Invokes all implementations of the given function definition that support the given context, and returns the
+   * results as an array.
+   *
+   * @param definition The constructor of the abstract class defining the function.
+   * @param args Arguments to pass to the function.
+   * @param context The context in which the function is run.
+   * @returns The results of the function calls.
+   */
+  callAll<D extends ImplementableFunction<C, any>>(
+    definition: ImplementableFunctionDefinitionConstructor<D>,
+    args: ImplementableFunctionArguments<D>,
+    context: C,
+  ): ImplementableFunctionReturnType<D>[] {
+    return this.getImplementations(definition, args, context).map((i) =>
+      i._call(context),
+    );
+  }
+
+  /**
    * Validates the arguments for the given function definition.
    * If the arguments are invalid, an {@link InvalidFunctionArgumentError} is thrown.
    * The constructor for the function definition is returned, which can be useful if the definition is referenced using
