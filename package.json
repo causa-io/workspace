@@ -1,6 +1,6 @@
 {
   "name": "@causa/workspace",
-  "version": "0.21.1",
+  "version": "0.22.0",
   "description": "Provides the base functionalities for a workspace: configuration loading and registering functions.",
   "repository": {
     "type": "git",
@@ -45,7 +45,7 @@
     "globby": "^16.1.0",
     "js-yaml": "^4.1.1",
     "lodash-es": "^4.17.23",
-    "pino": "^10.3.0",
+    "pino": "^10.3.1",
     "resolve-package-path": "^4.0.3",
     "semver": "^7.7.4"
   },
@@ -68,6 +68,6 @@
     "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.54.0"
+    "typescript-eslint": "^8.55.0"
   }
 }
