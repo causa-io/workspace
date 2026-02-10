@@ -3,13 +3,7 @@
 title: BaseConfigurationSchema
 type: object
 description: The schema for core elements of the configuration.
-required:
-  - version
 properties:
-  version:
-    type: integer
-    description: The version number for the used configuration schema.
-
   workspace:
     title: Workspace
     type: object
