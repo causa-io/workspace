@@ -1,6 +1,6 @@
 {
   "name": "@causa/workspace",
-  "version": "0.21.1",
+  "version": "0.22.0",
   "description": "Provides the base functionalities for a workspace: configuration loading and registering functions.",
   "repository": {
     "type": "git",
