@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+Chores:
+
+- Remove unused `version` in configuration schema.
+
 ## v0.22.0 (2026-02-10)
 
 Features:
