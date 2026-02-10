@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.22.1 (2026-02-10)
+
 Chores:
 
 - Remove unused `version` in configuration schema.
