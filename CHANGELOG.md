@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+Features:
+
+- Allow overriding the file reader used when loading configurations, through the `fileReader` option on `loadWorkspaceConfiguration`, `listProjectPaths`, and `WorkspaceContext.init`.
+- Expose `rawConfigurations` on the `WorkspaceContext`.
+
+Fixes:
+
+- Support loading environment configurations that contain formatted (`$format`) values.
+
+Chores:
+
+- Upgrade dependencies.
+
 ## v0.23.0 (2026-04-13)
 
 Breaking changes:

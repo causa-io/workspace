@@ -1,4 +1,3 @@
-import { readFile } from 'fs/promises';
 import { globby } from 'globby';
 import { load } from 'js-yaml';
 import { get } from 'lodash-es';
@@ -13,6 +12,7 @@ import {
   type RawConfiguration,
 } from '../configuration/index.js';
 import type { BaseConfiguration } from './base-configuration.js';
+import { DEFAULT_FILE_READER, type FileReaderOption } from '../file-utils.js';
 import { InvalidWorkspaceConfigurationFilesError } from './errors.js';
 
 /**
@@ -51,12 +51,15 @@ export enum WorkspaceConfigurationSourceType {
  * Creates a {@link RawConfiguration} from a file.
  *
  * @param source The path to the configuration file.
+ * @param options Options for reading the file.
  * @returns The {@link RawConfiguration}.
  */
-export async function makeFileConfiguration<T = any>(
+async function makeFileConfiguration<T = any>(
   source: string,
+  options: FileReaderOption = {},
 ): Promise<RawConfiguration<T>> {
-  const content = await readFile(source, { encoding: 'utf-8' });
+  const fileReader = options.fileReader ?? DEFAULT_FILE_READER;
+  const content = await fileReader(source);
   const configuration = load(content) as any;
   return {
     sourceType: ConfigurationReaderSourceType.File,
@@ -71,12 +74,12 @@ export async function makeFileConfiguration<T = any>(
  * In a single folder, files are returned in descending alphabetical order.
  *
  * @param basePath The path from which the search is started, then moving up the folder hierarchy.
- * @param fileRegexps The list of regular expressions from which a filename should produce at least one match to be
- *   considered a configuration file.
+ * @param options Options for loading the configurations.
  * @returns The list of {@link RawConfiguration}s.
  */
 async function loadRawConfigurations<T extends object>(
   basePath: string,
+  options: FileReaderOption = {},
 ): Promise<RawConfiguration<T>[]> {
   const directories = [basePath];
 
@@ -98,7 +101,7 @@ async function loadRawConfigurations<T extends object>(
 
       return await Promise.all(
         configurationFiles.map((fileName) =>
-          makeFileConfiguration(join(path, fileName)),
+          makeFileConfiguration(join(path, fileName), options),
         ),
       );
     }),
@@ -111,10 +114,12 @@ async function loadRawConfigurations<T extends object>(
  * Loads all the file configurations located in a folder or its subfolders.
  *
  * @param rootPath The root path from which configuration files are searched recursively.
+ * @param options Options for loading the configurations.
  * @returns The list of {@link RawConfiguration}s loaded from the root path and its subdirectories.
  */
 async function loadRawConfigurationsFromRoot<T extends object>(
   rootPath: string,
+  options: FileReaderOption = {},
 ): Promise<RawConfiguration<T>[]> {
   const paths = await globby(RECURSIVE_CONFIGURATION_PATTERNS, {
     gitignore: true,
@@ -123,7 +128,7 @@ async function loadRawConfigurationsFromRoot<T extends object>(
   });
 
   return await Promise.all(
-    paths.map((path) => makeFileConfiguration(join(rootPath, path))),
+    paths.map((path) => makeFileConfiguration(join(rootPath, path), options)),
   );
 }
 
@@ -201,19 +206,23 @@ export type LoadedWorkspaceConfiguration = {
  * @param workingDirectory The working directory from which the configuration should be loaded.
  * @param environmentId The ID of the environment for which the configuration should be set up. Can be `null`.
  * @param logger The logger to use.
+ * @param options Options for loading the configurations.
  * @returns The configuration, along with the inferred workspace and project paths.
  */
 export async function loadWorkspaceConfiguration(
   workingDirectory: string,
   environmentId: string | null,
   logger: Logger,
+  options: FileReaderOption = {},
 ): Promise<LoadedWorkspaceConfiguration> {
   logger.debug(
     `🔧 Looking for configurations starting from working directory '${workingDirectory}'.`,
   );
 
-  const configurations =
-    await loadRawConfigurations<BaseConfiguration>(workingDirectory);
+  const configurations = await loadRawConfigurations<BaseConfiguration>(
+    workingDirectory,
+    options,
+  );
   if (configurations.length === 0) {
     throw new InvalidWorkspaceConfigurationFilesError(
       `No configuration file was found starting at working directory '${workingDirectory}'.`,
@@ -229,6 +238,7 @@ export async function loadWorkspaceConfiguration(
 
     const { configuration: envConf } = configuration.getOrThrow(
       `environments.${environmentId}`,
+      { unsafe: true },
     );
 
     if (envConf) {
@@ -262,10 +272,14 @@ export async function loadWorkspaceConfiguration(
  * containing a project configuration.
  *
  * @param rootPath The root path from which configuration files are searched recursively.
+ * @param options Options for loading the configurations.
  * @returns The list of directory paths containing a project configuration.
  */
-export async function listProjectPaths(rootPath: string): Promise<string[]> {
-  const configurations = await loadRawConfigurationsFromRoot(rootPath);
+export async function listProjectPaths(
+  rootPath: string,
+  options: FileReaderOption = {},
+): Promise<string[]> {
+  const configurations = await loadRawConfigurationsFromRoot(rootPath, options);
   return findPathInConfigurations(configurations, 'project.name', {
     allowMultiple: true,
   });

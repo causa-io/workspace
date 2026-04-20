@@ -4,6 +4,7 @@ import { tmpdir } from 'os';
 import { join, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import {
+  ConfigurationReaderSourceType,
   ConfigurationValueNotFoundError,
   type PartialConfiguration,
 } from '../configuration/index.js';
@@ -21,6 +22,7 @@ import {
   SecretBackendNotFoundError,
   SecretBackendNotSpecifiedError,
 } from './errors.js';
+import { WorkspaceConfigurationSourceType } from './configuration.js';
 import { writeConfiguration } from './utils.test.js';
 
 describe('WorkspaceContext', () => {
@@ -86,6 +88,23 @@ describe('WorkspaceContext', () => {
         },
         myService: { myValue: '🎉' },
       });
+      expect(actualContext.rawConfigurations).toEqual([
+        {
+          sourceType: ConfigurationReaderSourceType.File,
+          source: join(tmpDir, 'causa.yaml'),
+          configuration: workspaceConfiguration,
+        },
+        {
+          sourceType: ConfigurationReaderSourceType.File,
+          source: join(tmpDir, 'project', 'causa.yaml'),
+          configuration: projectConfiguration,
+        },
+        {
+          sourceType: WorkspaceConfigurationSourceType.Environment,
+          source: 'dev',
+          configuration: workspaceConfiguration.environments?.dev.configuration,
+        },
+      ]);
       expect(actualExternalPaths).toBeEmpty();
     });
 

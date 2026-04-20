@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import { mkdtemp, rm, symlink } from 'fs/promises';
 import 'jest-extended';
 import { tmpdir } from 'os';
@@ -9,6 +10,7 @@ import {
   ConfigurationValueNotFoundError,
   type PartialConfiguration,
 } from '../configuration/index.js';
+import type { FileReader } from '../file-utils.js';
 import type { BaseConfiguration } from './base-configuration.js';
 import {
   WorkspaceConfigurationSourceType,
@@ -139,6 +141,58 @@ describe('configuration', () => {
       ]);
     });
 
+    it('should load a configuration with an environment containing a formatted value', async () => {
+      const configuration: PartialConfiguration<BaseConfiguration> = {
+        workspace: { name: 'my-workspace' },
+        environments: {
+          dev: {
+            name: 'Dev 🪛',
+            configuration: {
+              secrets: {
+                devSecret: {
+                  value: {
+                    $format: '${ configuration("workspace.name") }',
+                  } as any,
+                },
+              },
+            },
+          },
+        },
+      };
+      await writeConfiguration(tmpDir, './causa.yaml', configuration);
+      const expectedConfiguration = {
+        ...configuration,
+        ...configuration.environments?.dev.configuration,
+      };
+
+      const actualConfiguration = await loadWorkspaceConfiguration(
+        tmpDir,
+        'dev',
+        logger,
+      );
+
+      expect(actualConfiguration).toEqual({
+        configuration: expect.any(ConfigurationReader),
+        rootPath: tmpDir,
+        projectPath: null,
+      });
+      expect(actualConfiguration.configuration.get({ unsafe: true })).toEqual(
+        expectedConfiguration,
+      );
+      expect(actualConfiguration.configuration.rawConfigurations).toEqual([
+        {
+          sourceType: ConfigurationReaderSourceType.File,
+          source: join(tmpDir, 'causa.yaml'),
+          configuration: configuration,
+        },
+        {
+          sourceType: WorkspaceConfigurationSourceType.Environment,
+          source: 'dev',
+          configuration: configuration.environments?.dev.configuration,
+        },
+      ]);
+    });
+
     it('should load several files and infer the project path', async () => {
       const workspaceConfiguration: PartialConfiguration<BaseConfiguration> = {
         workspace: { name: 'my-workspace' },
@@ -184,6 +238,29 @@ describe('configuration', () => {
           configuration: projectConfiguration,
         },
       ]);
+    });
+
+    it('should use the provided file reader to load configurations', async () => {
+      await writeConfiguration(tmpDir, './causa.yaml', {
+        workspace: { name: 'on-disk' },
+      });
+      const fileReader = jest
+        .fn<FileReader>()
+        .mockResolvedValue('workspace:\n  name: from-reader\n');
+
+      const actualConfiguration = await loadWorkspaceConfiguration(
+        tmpDir,
+        null,
+        logger,
+        { fileReader },
+      );
+
+      expect(actualConfiguration.configuration.get()).toEqual({
+        workspace: { name: 'from-reader' },
+      });
+      expect(fileReader).toHaveBeenCalledExactlyOnceWith(
+        join(tmpDir, 'causa.yaml'),
+      );
     });
 
     it('should throw when the workspace is defined in two different places', async () => {
@@ -246,6 +323,24 @@ describe('configuration', () => {
       const actualPaths = await listProjectPaths(tmpDir);
 
       expect(actualPaths).toEqual([tmpDir]);
+    });
+
+    it('should use the provided file reader when loading configurations', async () => {
+      await writeConfiguration(tmpDir, './causa.yaml', {
+        workspace: { name: 'my-workspace' },
+      });
+      const fileReader = jest
+        .fn<(source: string) => Promise<string>>()
+        .mockResolvedValue(
+          'project:\n  name: from-reader\n  type: "🐍"\n  language: "🇫🇷"\n',
+        );
+
+      const actualPaths = await listProjectPaths(tmpDir, { fileReader });
+
+      expect(actualPaths).toEqual([tmpDir]);
+      expect(fileReader).toHaveBeenCalledExactlyOnceWith(
+        join(tmpDir, 'causa.yaml'),
+      );
     });
 
     it('should return several paths and ignore symbolic links', async () => {
