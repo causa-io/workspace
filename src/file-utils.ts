@@ -1,6 +1,29 @@
+import { readFile } from 'fs/promises';
 import { type Options, globby } from 'globby';
 import { template } from 'lodash-es';
 import { join } from 'path';
+
+/**
+ * A function that reads the content of a file.
+ */
+export type FileReader = (source: string) => Promise<string>;
+
+/**
+ * The default {@link FileReader}, which reads files from disk using UTF-8 encoding.
+ */
+export const DEFAULT_FILE_READER: FileReader = (source) =>
+  readFile(source, { encoding: 'utf-8' });
+
+/**
+ * An option object accepting a custom {@link FileReader}.
+ */
+export type FileReaderOption = {
+  /**
+   * The {@link FileReader} used to read file contents.
+   * Defaults to {@link DEFAULT_FILE_READER}.
+   */
+  fileReader?: FileReader;
+};
 
 /**
  * A file matched by {@link listFilesAndFormat}.

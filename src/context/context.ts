@@ -6,6 +6,7 @@ import type {
   GetFieldType,
   RawConfiguration,
 } from '../configuration/index.js';
+import type { FileReaderOption } from '../file-utils.js';
 import {
   FunctionRegistry,
   type ImplementableFunctionArguments,
@@ -65,7 +66,7 @@ export type WorkspaceContextOptions = {
    * The logger to use. Defaults to `pino()`.
    */
   logger?: Logger;
-};
+} & FileReaderOption;
 
 /**
  * Options for {@link WorkspaceContext.getAndRender} and related methods.
@@ -187,10 +188,11 @@ export class WorkspaceContext {
    * Looks for Causa configuration files from the workspace root directory, and returns the list of directory paths that
    * contain a project
    *
+   * @param options Options for loading the configurations.
    * @returns The list of paths.
    */
-  async listProjectPaths(): Promise<string[]> {
-    return await listProjectPaths(this.rootPath);
+  async listProjectPaths(options: FileReaderOption = {}): Promise<string[]> {
+    return await listProjectPaths(this.rootPath, options);
   }
 
   /**
@@ -528,7 +530,9 @@ export class WorkspaceContext {
     const environment = options.environment ?? null;
 
     const { configuration, rootPath, projectPath } =
-      await loadWorkspaceConfiguration(workingDirectory, environment, logger);
+      await loadWorkspaceConfiguration(workingDirectory, environment, logger, {
+        fileReader: options.fileReader,
+      });
 
     const functionRegistry = new FunctionRegistry(WorkspaceFunction);
 
