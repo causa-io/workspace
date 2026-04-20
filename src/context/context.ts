@@ -4,6 +4,7 @@ import { type Logger, pino } from 'pino';
 import type {
   ConfigurationGetOptions,
   GetFieldType,
+  RawConfiguration,
 } from '../configuration/index.js';
 import {
   FunctionRegistry,
@@ -113,6 +114,13 @@ export class WorkspaceContext {
     readonly logger: Logger,
   ) {
     this.serviceCache = new ServiceCache(this);
+  }
+
+  /**
+   * The list of {@link RawConfiguration}s that were merged to build the workspace configuration.
+   */
+  get rawConfigurations(): RawConfiguration<BaseConfiguration>[] {
+    return this.configuration.rawConfigurations;
   }
 
   /**
