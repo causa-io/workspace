@@ -139,6 +139,58 @@ describe('configuration', () => {
       ]);
     });
 
+    it('should load a configuration with an environment containing a formatted value', async () => {
+      const configuration: PartialConfiguration<BaseConfiguration> = {
+        workspace: { name: 'my-workspace' },
+        environments: {
+          dev: {
+            name: 'Dev 🪛',
+            configuration: {
+              secrets: {
+                devSecret: {
+                  value: {
+                    $format: '${ configuration("workspace.name") }',
+                  } as any,
+                },
+              },
+            },
+          },
+        },
+      };
+      await writeConfiguration(tmpDir, './causa.yaml', configuration);
+      const expectedConfiguration = {
+        ...configuration,
+        ...configuration.environments?.dev.configuration,
+      };
+
+      const actualConfiguration = await loadWorkspaceConfiguration(
+        tmpDir,
+        'dev',
+        logger,
+      );
+
+      expect(actualConfiguration).toEqual({
+        configuration: expect.any(ConfigurationReader),
+        rootPath: tmpDir,
+        projectPath: null,
+      });
+      expect(actualConfiguration.configuration.get({ unsafe: true })).toEqual(
+        expectedConfiguration,
+      );
+      expect(actualConfiguration.configuration.rawConfigurations).toEqual([
+        {
+          sourceType: ConfigurationReaderSourceType.File,
+          source: join(tmpDir, 'causa.yaml'),
+          configuration: configuration,
+        },
+        {
+          sourceType: WorkspaceConfigurationSourceType.Environment,
+          source: 'dev',
+          configuration: configuration.environments?.dev.configuration,
+        },
+      ]);
+    });
+
     it('should load several files and infer the project path', async () => {
       const workspaceConfiguration: PartialConfiguration<BaseConfiguration> = {
         workspace: { name: 'my-workspace' },

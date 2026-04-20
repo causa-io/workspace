@@ -229,6 +229,7 @@ export async function loadWorkspaceConfiguration(
 
     const { configuration: envConf } = configuration.getOrThrow(
       `environments.${environmentId}`,
+      { unsafe: true },
     );
 
     if (envConf) {
