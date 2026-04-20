@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.24.0 (2026-04-20)
+
 Features:
 
 - Allow overriding the file reader used when loading configurations, through the `fileReader` option on `loadWorkspaceConfiguration`, `listProjectPaths`, and `WorkspaceContext.init`.
