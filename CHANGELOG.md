@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.24.1 (2026-04-29)
+
 Fixes:
 
 - Export missing `WorkspaceConfiguration`.
