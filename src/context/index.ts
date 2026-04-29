@@ -3,6 +3,7 @@ export { loadWorkspaceConfiguration } from './configuration.js';
 export type {
   LoadedWorkspaceConfiguration,
   TypedWorkspaceConfiguration,
+  WorkspaceConfiguration,
 } from './configuration.js';
 export { WorkspaceContext } from './context.js';
 export { callDeferred } from './defer.js';
