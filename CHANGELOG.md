@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.25.0-beta.1 (2026-05-14)
+
 Breaking changes:
 
 - The execution context is now exposed as the `_context` property on `ImplementableFunction` instances, rather than being passed as an argument to `_call` and `_supports`. Implementations should access it via `this._context`.
