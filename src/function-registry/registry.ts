@@ -194,8 +194,12 @@ export class FunctionRegistry<C extends object> {
         ? this.getRegisteredFunctionByName(definition)
         : this.getMatchingRegisteredFunction(definition);
     return (registeredFunction?.implementations ?? [])
-      .map((ctor) => plainToInstance(ctor, args))
-      .filter((implementation) => implementation._supports(context));
+      .map((ctor) => {
+        const instance = plainToInstance(ctor, args);
+        (instance as { _context: C })._context = context;
+        return instance;
+      })
+      .filter((implementation) => implementation._supports());
   }
 
   /**
@@ -212,7 +216,7 @@ export class FunctionRegistry<C extends object> {
     context: C,
   ): ImplementableFunctionReturnType<D> {
     const implementation = this.getImplementation(definition, args, context);
-    return implementation._call(context);
+    return implementation._call();
   }
 
   /**
@@ -230,7 +234,7 @@ export class FunctionRegistry<C extends object> {
     context: C,
   ): ImplementableFunctionReturnType<D>[] {
     return this.getImplementations(definition, args, context).map((i) =>
-      i._call(context),
+      i._call(),
     );
   }
 

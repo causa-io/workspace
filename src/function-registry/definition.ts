@@ -31,21 +31,25 @@ export type ImplementableFunctionImplementationConstructor<
  */
 export abstract class ImplementableFunction<C extends object, R> {
   /**
+   * The context available for the execution.
+   * This is set by the function registry when an instance is created, and should not be set manually.
+   */
+  declare readonly _context: C;
+
+  /**
    * Runs the concrete implementation of the function.
    * Arguments are obtained from the properties of the class instance.
    *
-   * @param context The context available for the execution.
    * @returns The result of the function's execution, as defined by the abstract function definition.
    */
-  abstract _call(context: C): R;
+  abstract _call(): R;
 
   /**
-   * Checks whether this implementation supports the given context.
+   * Checks whether this implementation supports the current context.
    *
-   * @param context The context used to evaluate whether the function is supported.
-   * @returns `true` If the implementation can be run against this context.
+   * @returns `true` If the implementation can be run against the current context.
    */
-  abstract _supports(context: C): boolean;
+  abstract _supports(): boolean;
 }
 
 /**
@@ -54,7 +58,7 @@ export abstract class ImplementableFunction<C extends object, R> {
  */
 export type ImplementableFunctionArguments<
   DefinitionType extends ImplementableFunction<any, any>,
-> = Omit<DefinitionType, '_call' | '_supports'>;
+> = Omit<DefinitionType, '_call' | '_supports' | '_context'>;
 
 /**
  * The return type extracted from a function definition.
@@ -62,8 +66,8 @@ export type ImplementableFunctionArguments<
  * always be able to infer those.
  */
 export type ImplementableFunctionReturnType<T> = T extends {
-  _call(context: any): infer R;
-  _supports(context: any): boolean;
+  _call(): infer R;
+  _supports(): boolean;
 }
   ? R
   : never;
