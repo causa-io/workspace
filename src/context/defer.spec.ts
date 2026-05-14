@@ -15,17 +15,16 @@ describe('callDeferred', () => {
     await rm(tmpDir, { recursive: true, force: true });
   });
 
-  it('should import the .call sibling and call it bound to self with the context', async () => {
+  it('should import the .call sibling and call it bound to self', async () => {
     const callFile = join(tmpDir, 'my-function.call.js');
     await writeFile(
       callFile,
-      `module.exports = function(context) { return \`\${this.someProperty}|\${context.testValue}\`; };`,
+      `module.exports = function() { return \`\${this.someProperty}|\${this._context.testValue}\`; };`,
     );
-    const self = { someProperty: '🎸' } as any;
-    const context = { testValue: '🎵' } as any;
+    const self = { someProperty: '🎸', _context: { testValue: '🎵' } } as any;
     const from = pathToFileURL(join(tmpDir, 'my-function.js')).toString();
 
-    const actualResult = await callDeferred(self, context, from);
+    const actualResult = await callDeferred(self, from);
 
     expect(actualResult).toEqual('🎸|🎵');
   });
