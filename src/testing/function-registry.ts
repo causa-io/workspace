@@ -68,12 +68,16 @@ export function registerMockFunction<D extends WorkspaceFunction<any>>(
   const supports = options.supports ?? (() => true);
 
   class MockFunction extends (definition as any) {
-    _call(context: WorkspaceContext) {
-      return mockCall(context, this as any);
+    declare readonly _context: WorkspaceContext;
+
+    _call() {
+      const { _context, ...args } = this as any;
+      return mockCall(_context, args);
     }
 
-    _supports(context: WorkspaceContext): boolean {
-      return supports(context, this as any);
+    _supports(): boolean {
+      const { _context, ...args } = this as any;
+      return supports(_context, args);
     }
   }
 

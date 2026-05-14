@@ -117,6 +117,7 @@ describe('FunctionRegistry', () => {
 
     it('should throw an error if the class does not implement a definition', () => {
       class Nope {
+        declare readonly _context: any;
         _call(): any {}
         _supports(): any {}
       }
@@ -263,12 +264,12 @@ describe('FunctionRegistry', () => {
     abstract class MyContextDefinition extends MyBaseDefinition<string> {}
 
     class MyContextImplementation extends MyContextDefinition {
-      _call(context: MyContext): string {
-        return context.someValue;
+      _call(): string {
+        return this._context.someValue;
       }
 
-      _supports(context: MyContext): boolean {
-        return context.someValue === '🚀';
+      _supports(): boolean {
+        return this._context.someValue === '🚀';
       }
     }
 
