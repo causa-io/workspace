@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## v0.25.0-beta.2 (2026-05-14)
+
+Breaking changes:
+
+- Remove the `context` argument from `callDeferred`.
+
 ## v0.25.0-beta.1 (2026-05-14)
 
 Breaking changes:
