@@ -1,5 +1,5 @@
 import { globby } from 'globby';
-import { load } from 'js-yaml';
+import { parse } from 'yaml';
 import { get } from 'lodash-es';
 import { dirname, join } from 'path';
 import type { Logger } from 'pino';
@@ -60,7 +60,7 @@ async function makeFileConfiguration<T = any>(
 ): Promise<RawConfiguration<T>> {
   const fileReader = options.fileReader ?? DEFAULT_FILE_READER;
   const content = await fileReader(source);
-  const configuration = load(content) as any;
+  const configuration = parse(content);
   return {
     sourceType: ConfigurationReaderSourceType.File,
     source,

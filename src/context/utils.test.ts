@@ -1,5 +1,5 @@
 import { mkdir, writeFile } from 'fs/promises';
-import { dump } from 'js-yaml';
+import { stringify } from 'yaml';
 import { dirname, join } from 'path';
 import type { PartialConfiguration } from '../configuration/index.js';
 import type { BaseConfiguration } from './base-configuration.js';
@@ -14,6 +14,6 @@ export async function writeConfiguration(
 
   await mkdir(dirPath, { recursive: true });
 
-  const confStr = dump(configuration);
+  const confStr = stringify(configuration);
   await writeFile(fullPath, confStr);
 }

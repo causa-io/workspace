@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+Chores:
+
+- Replace the `js-yaml` dependency with `yaml`.
+
 ## v0.25.0-beta.2 (2026-05-14)
 
 Breaking changes:

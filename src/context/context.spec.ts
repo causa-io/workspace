@@ -29,7 +29,7 @@ describe('WorkspaceContext', () => {
   let tmpDir: string;
 
   beforeEach(async () => {
-    // Creating the temporary directory outside of the repository, ensures that module resolution cannot find 'js-yaml'
+    // Creating the temporary directory outside of the repository, ensures that module resolution cannot find 'yaml'
     // when starting from the workspace root path.
     tmpDir = resolve(await mkdtemp(join(tmpdir(), 'causa-tests-')));
   });
@@ -366,7 +366,7 @@ describe('WorkspaceContext', () => {
         workspace: { name: 'my-workspace' },
         causa: {
           modules: {
-            'js-yaml': 'file:/some/path',
+            yaml: 'file:/some/path',
           },
         },
         myFunction: { returnValue: '🎉' },
@@ -377,7 +377,7 @@ describe('WorkspaceContext', () => {
         workingDirectory: tmpDir,
       });
 
-      // This should not be a `ModuleVersionError`. It should be a `TypeError` because `js-yaml` could be loaded but is
+      // This should not be a `ModuleVersionError`. It should be a `TypeError` because `yaml` could be loaded but is
       // not a valid Causa module.
       await expect(actualPromise).rejects.toThrow(TypeError);
     });
@@ -389,10 +389,10 @@ describe('WorkspaceContext', () => {
         workspace: { name: 'my-workspace' },
         causa: {
           // This is obviously not a valid workspace module, but the point is to make the version check fail, which
-          // occurs before the actual import. `js-yaml` is a dependency of this module and a newer version is used.
+          // occurs before the actual import. `yaml` is a dependency of this module and a newer version is used.
           // Also, this ensures modules are resolved from the source file path rather than the workspace root.
           // (See the initialization of `tmpDir`.)
-          modules: { 'js-yaml': '^3.2.0' },
+          modules: { yaml: '^1.2.0' },
         },
         myFunction: { returnValue: '🎉' },
       };
