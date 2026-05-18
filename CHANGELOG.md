@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.25.0-beta.3 (2026-05-18)
+
 Chores:
 
 - Replace the `js-yaml` dependency with `yaml`.
