@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v1.0.1 (2026-06-09)
+
 Fixes:
 
 - Prefer deduplication when installing Causa modules.
