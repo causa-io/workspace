@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+Fixes:
+
+- Prefer deduplication when installing Causa modules.
+
 ## v1.0.0 (2026-06-09)
 
 This release includes all the changes from the `v0.25.0-beta.*` versions.
