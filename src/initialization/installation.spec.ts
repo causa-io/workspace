@@ -62,6 +62,25 @@ describe('installation', () => {
     ).resolves.toBeTruthy();
   });
 
+  it('should prefer deduplication when installing modules', async () => {
+    await setUpCausaFolder(
+      tmpDir,
+      { '@causa/cli': '*', '@causa/workspace-core': '0.34.0' },
+      logger,
+    );
+
+    const actualCliPackageFile = await readFile(
+      join(tmpDir, '.causa', 'node_modules', '@causa', 'cli', 'package.json'),
+    );
+    const actualCliVersion = JSON.parse(
+      actualCliPackageFile.toString(),
+    ).version;
+    // Without deduplication, the latest `@causa/cli` (`>= 1.0.0`) would be installed at the top level, with an older
+    // version nested in `@causa/workspace-core`.
+    const actualCliMajor = Number(actualCliVersion.split('.')[0]);
+    expect(actualCliMajor).toBeLessThan(1);
+  }, 60000);
+
   it('should throw an error when installing the modules fails', async () => {
     const actualPromise = setUpCausaFolder(
       tmpDir,

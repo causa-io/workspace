@@ -80,7 +80,7 @@ async function installModules(
   logger.debug(`➕ Installing node modules in '${causaFolder}'.`);
 
   await new Promise<void>((resolve, reject) => {
-    const child = exec('npm install --quiet', {
+    const child = exec('npm install --quiet --prefer-dedupe', {
       cwd: causaFolder,
     });
     child.stderr?.pipe(process.stderr);
