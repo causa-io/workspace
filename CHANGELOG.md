@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v1.0.0 (2026-06-09)
+
+This release includes all the changes from the `v0.25.0-beta.*` versions.
+
 ## v0.25.0-beta.3 (2026-05-18)
 
 Chores:
