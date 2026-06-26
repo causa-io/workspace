@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+Fixes:
+
+- Ignore file system access errors (e.g. permission errors) when walking the folder hierarchy searching for configurations. Directories that cannot be listed are now skipped instead of failing the entire load.
+
 ## v1.0.1 (2026-06-09)
 
 Fixes:
