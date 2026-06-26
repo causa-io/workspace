@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals';
-import { mkdtemp, rm, symlink } from 'fs/promises';
+import { chmod, mkdtemp, rm, symlink } from 'fs/promises';
 import 'jest-extended';
 import { tmpdir } from 'os';
 import { join, resolve } from 'path';
@@ -261,6 +261,33 @@ describe('configuration', () => {
       expect(fileReader).toHaveBeenCalledExactlyOnceWith(
         join(tmpDir, 'causa.yaml'),
       );
+    });
+
+    it('should ignore directories that cannot be listed due to permission errors', async () => {
+      const expectedConfiguration = { workspace: { name: 'my-workspace' } };
+      await writeConfiguration(tmpDir, './causa.yaml', expectedConfiguration);
+      const restrictedDir = join(tmpDir, 'restricted');
+      await writeConfiguration(restrictedDir, './causa.yaml', {
+        project: { name: 'my-project', type: '🐍', language: '🇫🇷' },
+      });
+      await chmod(restrictedDir, 0o000);
+
+      try {
+        const actualConfiguration = await loadWorkspaceConfiguration(
+          restrictedDir,
+          null,
+          logger,
+        );
+
+        expect(actualConfiguration.rootPath).toEqual(tmpDir);
+        expect(actualConfiguration.projectPath).toBeNull();
+        expect(actualConfiguration.configuration.get()).toEqual(
+          expectedConfiguration,
+        );
+      } finally {
+        // Restore permissions so that the directory can be cleaned up.
+        await chmod(restrictedDir, 0o755);
+      }
     });
 
     it('should throw when the workspace is defined in two different places', async () => {

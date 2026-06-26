@@ -1,8 +1,8 @@
 import { globby } from 'globby';
-import { parse } from 'yaml';
 import { get } from 'lodash-es';
 import { dirname, join } from 'path';
 import type { Logger } from 'pino';
+import { parse } from 'yaml';
 import {
   ConfigurationReader,
   ConfigurationReaderSourceType,
@@ -11,8 +11,8 @@ import {
   type PartialConfiguration,
   type RawConfiguration,
 } from '../configuration/index.js';
-import type { BaseConfiguration } from './base-configuration.js';
 import { DEFAULT_FILE_READER, type FileReaderOption } from '../file-utils.js';
+import type { BaseConfiguration } from './base-configuration.js';
 import { InvalidWorkspaceConfigurationFilesError } from './errors.js';
 
 /**
@@ -94,6 +94,7 @@ async function loadRawConfigurations<T extends object>(
           gitignore: true,
           cwd: path,
           deep: 0,
+          suppressErrors: true,
         })
       )
         .sort()
@@ -125,6 +126,7 @@ async function loadRawConfigurationsFromRoot<T extends object>(
     gitignore: true,
     cwd: rootPath,
     followSymbolicLinks: false,
+    suppressErrors: true,
   });
 
   return await Promise.all(
