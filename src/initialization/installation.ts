@@ -60,6 +60,14 @@ async function makePackageFile(
 }
 
 /**
+ * The npm command used to install the modules in the Causa folder.
+ * Install-time lifecycle scripts are never run. Audit and funding notices are also disabled, as they cannot be acted
+ * upon from the Causa folder.
+ */
+const NPM_INSTALL_COMMAND =
+  'npm install --quiet --prefer-dedupe --ignore-scripts --no-audit --no-fund';
+
+/**
  * Installs the npm modules in the Causa folder, after removing the existing `node_modules` folder.
  *
  * @param causaFolder The location of the Causa folder in which to install the modules.
@@ -80,9 +88,7 @@ async function installModules(
   logger.debug(`➕ Installing node modules in '${causaFolder}'.`);
 
   await new Promise<void>((resolve, reject) => {
-    const child = exec('npm install --quiet --prefer-dedupe', {
-      cwd: causaFolder,
-    });
+    const child = exec(NPM_INSTALL_COMMAND, { cwd: causaFolder });
     child.stderr?.pipe(process.stderr);
     child.on('close', (code) => {
       if (code === 0) {
