@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm, stat } from 'fs/promises';
+import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { type Logger, pino } from 'pino';
@@ -80,6 +80,33 @@ describe('installation', () => {
     const actualCliMajor = Number(actualCliVersion.split('.')[0]);
     expect(actualCliMajor).toBeLessThan(1);
   }, 60000);
+
+  it('should not run the install scripts of modules', async () => {
+    const modulePath = join(tmpDir, 'module-with-scripts');
+    const markerPath = join(modulePath, 'postinstall-ran');
+    await mkdir(modulePath);
+    await writeFile(
+      join(modulePath, 'package.json'),
+      JSON.stringify({
+        name: 'module-with-scripts',
+        version: '1.0.0',
+        scripts: {
+          postinstall: `node -e "require('fs').writeFileSync('${markerPath}', '')"`,
+        },
+      }),
+    );
+
+    await setUpCausaFolder(
+      tmpDir,
+      { 'module-with-scripts': 'file:module-with-scripts' },
+      logger,
+    );
+
+    await expect(
+      stat(join(tmpDir, '.causa', 'node_modules', 'module-with-scripts')),
+    ).resolves.toBeTruthy();
+    await expect(stat(markerPath)).rejects.toThrow('ENOENT');
+  });
 
   it('should throw an error when installing the modules fails', async () => {
     const actualPromise = setUpCausaFolder(
