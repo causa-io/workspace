@@ -32,8 +32,7 @@ export class InvalidFunctionError extends FunctionRegistryError {}
 export class NoImplementationFoundError extends FunctionRegistryError {
   constructor(
     readonly definition:
-      | string
-      | ImplementableFunctionDefinitionConstructor<any>,
+      string | ImplementableFunctionDefinitionConstructor<any>,
   ) {
     super(
       `Could not find any implementation of function '${
@@ -50,8 +49,7 @@ export class NoImplementationFoundError extends FunctionRegistryError {
 export class TooManyImplementationsError extends FunctionRegistryError {
   constructor(
     readonly definition:
-      | string
-      | ImplementableFunctionDefinitionConstructor<any>,
+      string | ImplementableFunctionDefinitionConstructor<any>,
   ) {
     super(
       `Found more than one implementation of function '${
