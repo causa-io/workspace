@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v1.1.0 (2026-09-18)
+
 Features:
 
 - Disable install scripts, as well as audit and funding notices, when installing Causa modules.
