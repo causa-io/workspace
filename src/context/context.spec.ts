@@ -66,6 +66,7 @@ describe('WorkspaceContext', () => {
       expect(actualContext.workingDirectory).toEqual(expectedProjectDir);
       expect(actualContext.rootPath).toEqual(tmpDir);
       expect(actualContext.projectPath).toEqual(expectedProjectDir);
+      expect(actualContext.domainPath).toBeNull();
       expect(actualContext.getProjectPathOrThrow()).toEqual(expectedProjectDir);
       expect(actualContext.getEnvironmentOrThrow()).toEqual('dev');
       expect(actualContext.get('myService.myValue')).toEqual('🎉');

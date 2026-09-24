@@ -198,18 +198,24 @@ export type LoadedWorkspaceConfiguration = {
    * This can be `null` if the working directory is not located in a project.
    */
   projectPath: string | null;
+
+  /**
+   * The root directory of the domain within the workspace, inferred from the configuration files.
+   * This can be `null` if the working directory is not located in a domain.
+   */
+  domainPath: string | null;
 };
 
 /**
  * Sets up a {@link ConfigurationReader} using the given working directory as a starting point.
- * Configuration files found along the way are also used to determine the location of the workspace and project root
- * paths.
+ * Configuration files found along the way are also used to determine the location of the workspace, domain, and project
+ * root paths.
  *
  * @param workingDirectory The working directory from which the configuration should be loaded.
  * @param environmentId The ID of the environment for which the configuration should be set up. Can be `null`.
  * @param logger The logger to use.
  * @param options Options for loading the configurations.
- * @returns The configuration, along with the inferred workspace and project paths.
+ * @returns The configuration, along with the inferred workspace, domain, and project paths.
  */
 export async function loadWorkspaceConfiguration(
   workingDirectory: string,
@@ -266,7 +272,13 @@ export async function loadWorkspaceConfiguration(
     logger.debug(`📂 Found root of project at '${projectPath}'.`);
   }
 
-  return { configuration, rootPath, projectPath };
+  const domainPath =
+    findPathInConfigurations(configurations, 'domain.name')[0] ?? null;
+  if (domainPath) {
+    logger.debug(`📂 Found root of domain at '${domainPath}'.`);
+  }
+
+  return { configuration, rootPath, projectPath, domainPath };
 }
 
 /**

@@ -57,6 +57,7 @@ describe('configuration', () => {
         configuration: expect.any(ConfigurationReader),
         rootPath: tmpDir,
         projectPath: null,
+        domainPath: null,
       });
       expect(actualConfiguration.configuration.get()).toEqual(
         expectedConfiguration,
@@ -123,6 +124,7 @@ describe('configuration', () => {
         configuration: expect.any(ConfigurationReader),
         rootPath: tmpDir,
         projectPath: null,
+        domainPath: null,
       });
       expect(actualConfiguration.configuration.get()).toEqual(
         expectedConfiguration,
@@ -175,6 +177,7 @@ describe('configuration', () => {
         configuration: expect.any(ConfigurationReader),
         rootPath: tmpDir,
         projectPath: null,
+        domainPath: null,
       });
       expect(actualConfiguration.configuration.get({ unsafe: true })).toEqual(
         expectedConfiguration,
@@ -222,6 +225,7 @@ describe('configuration', () => {
         configuration: expect.any(ConfigurationReader),
         rootPath: tmpDir,
         projectPath: expectedProjectDir,
+        domainPath: null,
       });
       expect(actualConfiguration.configuration.get()).toEqual(
         expectedConfiguration,
@@ -238,6 +242,58 @@ describe('configuration', () => {
           configuration: projectConfiguration,
         },
       ]);
+    });
+
+    it('should infer the domain path', async () => {
+      await writeConfiguration(tmpDir, './causa.yaml', {
+        workspace: { name: 'my-workspace' },
+      });
+      await writeConfiguration(tmpDir, './domain/causa.yaml', {
+        domain: { name: 'My domain' },
+      });
+      await writeConfiguration(tmpDir, './domain/project/causa.yaml', {
+        project: { name: 'my-project', type: '🐍', language: '🇫🇷' },
+      });
+      const expectedDomainDir = join(tmpDir, 'domain');
+      const expectedProjectDir = join(expectedDomainDir, 'project');
+
+      const actualConfiguration = await loadWorkspaceConfiguration(
+        expectedProjectDir,
+        null,
+        logger,
+      );
+
+      expect(actualConfiguration).toEqual({
+        configuration: expect.any(ConfigurationReader),
+        rootPath: tmpDir,
+        projectPath: expectedProjectDir,
+        domainPath: expectedDomainDir,
+      });
+      expect(actualConfiguration.configuration.get('domain.name')).toEqual(
+        'My domain',
+      );
+    });
+
+    it('should throw when domains are nested', async () => {
+      await writeConfiguration(tmpDir, './causa.yaml', {
+        workspace: { name: 'my-workspace' },
+      });
+      await writeConfiguration(tmpDir, './domain/causa.yaml', {
+        domain: { name: 'My domain' },
+      });
+      await writeConfiguration(tmpDir, './domain/nested/causa.yaml', {
+        domain: { name: 'My nested domain' },
+      });
+
+      const actualPromise = loadWorkspaceConfiguration(
+        join(tmpDir, 'domain', 'nested'),
+        null,
+        logger,
+      );
+
+      await expect(actualPromise).rejects.toThrow(
+        InvalidWorkspaceConfigurationFilesError,
+      );
     });
 
     it('should use the provided file reader to load configurations', async () => {

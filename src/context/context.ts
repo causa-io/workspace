@@ -97,6 +97,8 @@ export class WorkspaceContext {
    * @param rootPath The root directory of the entire workspace.
    * @param projectPath The root directory of the current project, usually the working directory or one of its parents.
    *   May be `null` if the working directory is outside of a project (but still part of a workspace).
+   * @param domainPath The root directory of the current domain, usually one of the parents of the working directory.
+   *   May be `null` if the working directory is outside of a domain.
    * @param configuration The {@link ConfigurationReader} exposing the configuration loaded from possibly several
    *   sources.
    * @param functionRegistry The registry keeping a reference of all available implementations of
@@ -109,6 +111,7 @@ export class WorkspaceContext {
     readonly environment: string | null,
     readonly rootPath: string,
     readonly projectPath: string | null,
+    readonly domainPath: string | null,
     private readonly configuration: WorkspaceConfiguration,
     private readonly functionRegistry: FunctionRegistry<WorkspaceContext>,
     readonly processors: ProcessorInstruction[],
@@ -507,6 +510,7 @@ export class WorkspaceContext {
       this.environment,
       this.rootPath,
       this.projectPath,
+      this.domainPath,
       this.configuration.mergedWith(processorConfiguration),
       this.functionRegistry,
       [...this.processors, processor],
@@ -529,7 +533,7 @@ export class WorkspaceContext {
     const logger = options.logger ?? pino();
     const environment = options.environment ?? null;
 
-    const { configuration, rootPath, projectPath } =
+    const { configuration, rootPath, projectPath, domainPath } =
       await loadWorkspaceConfiguration(workingDirectory, environment, logger, {
         fileReader: options.fileReader,
       });
@@ -543,6 +547,7 @@ export class WorkspaceContext {
       environment,
       rootPath,
       projectPath,
+      domainPath,
       configuration,
       functionRegistry,
       [],
