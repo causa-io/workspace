@@ -17,6 +17,7 @@ import {
 import { ServiceCache } from '../service-cache/index.js';
 import type { BaseConfiguration } from './base-configuration.js';
 import {
+  listDomainPaths,
   listProjectPaths,
   loadWorkspaceConfiguration,
   makeProcessorConfiguration,
@@ -196,6 +197,17 @@ export class WorkspaceContext {
    */
   async listProjectPaths(options: FileReaderOption = {}): Promise<string[]> {
     return await listProjectPaths(this.rootPath, options);
+  }
+
+  /**
+   * Looks for Causa configuration files from the workspace root directory, and returns the list of directory paths that
+   * contain a domain.
+   *
+   * @param options Options for loading the configurations.
+   * @returns The list of paths.
+   */
+  async listDomainPaths(options: FileReaderOption = {}): Promise<string[]> {
+    return await listDomainPaths(this.rootPath, options);
   }
 
   /**

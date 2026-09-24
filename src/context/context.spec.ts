@@ -236,6 +236,34 @@ describe('WorkspaceContext', () => {
     });
   });
 
+  describe('listDomainPaths', () => {
+    it('should return the list of domain paths', async () => {
+      await writeConfiguration(tmpDir, './causa.yaml', {
+        workspace: { name: 'my-workspace' },
+      });
+      await writeConfiguration(tmpDir, './domain/causa.yaml', {
+        domain: { name: 'My domain' },
+      });
+      await writeConfiguration(tmpDir, './domain/project/causa.yaml', {
+        project: { name: 'my-project', type: '🐍', language: '🇫🇷' },
+      });
+      await writeConfiguration(tmpDir, './domain2/causa.yaml', {
+        domain: { name: 'My other domain' },
+      });
+      const context = await WorkspaceContext.init({
+        workingDirectory: join(tmpDir, 'domain', 'project'),
+      });
+
+      const actualDomainPaths = await context.listDomainPaths();
+
+      expect(context.domainPath).toEqual(join(tmpDir, 'domain'));
+      expect(actualDomainPaths).toIncludeSameMembers([
+        join(tmpDir, 'domain'),
+        join(tmpDir, 'domain2'),
+      ]);
+    });
+  });
+
   describe('clone', () => {
     it('should return a modified copy of the workspace', async () => {
       const workspaceConfiguration: PartialConfiguration<BaseConfiguration> = {

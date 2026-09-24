@@ -283,6 +283,26 @@ export async function loadWorkspaceConfiguration(
 
 /**
  * Looks for all Causa configuration files in a given directory and its subdirectories, and returns the directories
+ * containing a configuration with a non-null value at the given path.
+ *
+ * @param rootPath The root path from which configuration files are searched recursively.
+ * @param nonNullConfigurationPath A path in the configuration that should be non-null for the directory to be returned.
+ * @param options Options for loading the configurations.
+ * @returns The list of directory paths containing a matching configuration.
+ */
+async function listConfigurationPaths(
+  rootPath: string,
+  nonNullConfigurationPath: string,
+  options: FileReaderOption,
+): Promise<string[]> {
+  const configurations = await loadRawConfigurationsFromRoot(rootPath, options);
+  return findPathInConfigurations(configurations, nonNullConfigurationPath, {
+    allowMultiple: true,
+  });
+}
+
+/**
+ * Looks for all Causa configuration files in a given directory and its subdirectories, and returns the directories
  * containing a project configuration.
  *
  * @param rootPath The root path from which configuration files are searched recursively.
@@ -293,10 +313,22 @@ export async function listProjectPaths(
   rootPath: string,
   options: FileReaderOption = {},
 ): Promise<string[]> {
-  const configurations = await loadRawConfigurationsFromRoot(rootPath, options);
-  return findPathInConfigurations(configurations, 'project.name', {
-    allowMultiple: true,
-  });
+  return await listConfigurationPaths(rootPath, 'project.name', options);
+}
+
+/**
+ * Looks for all Causa configuration files in a given directory and its subdirectories, and returns the directories
+ * containing a domain configuration.
+ *
+ * @param rootPath The root path from which configuration files are searched recursively.
+ * @param options Options for loading the configurations.
+ * @returns The list of directory paths containing a domain configuration.
+ */
+export async function listDomainPaths(
+  rootPath: string,
+  options: FileReaderOption = {},
+): Promise<string[]> {
+  return await listConfigurationPaths(rootPath, 'domain.name', options);
 }
 
 /**
