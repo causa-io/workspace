@@ -21,12 +21,14 @@ describe('context', () => {
       const expectedWorkingDirectory = '/some/work/dir';
       const expectedRootPath = '/some/root/path';
       const expectedProjectPath = '/some/project/path';
+      const expectedDomainPath = '/some/domain/path';
       const expectedLogger = pino();
 
       const actualTestContext = createContext({
         workingDirectory: expectedWorkingDirectory,
         rootPath: expectedRootPath,
         projectPath: expectedProjectPath,
+        domainPath: expectedDomainPath,
         configuration: { workspace: { name: '💮' }, someOther: { value: 123 } },
         logger: expectedLogger,
         functions: [MyImplementation],
@@ -37,6 +39,7 @@ describe('context', () => {
       expect(actualContext.workingDirectory).toEqual(expectedWorkingDirectory);
       expect(actualContext.rootPath).toEqual(expectedRootPath);
       expect(actualContext.projectPath).toEqual(expectedProjectPath);
+      expect(actualContext.domainPath).toEqual(expectedDomainPath);
       expect(actualContext.call(MyDefinition, {})).toEqual('🎉');
       expect(actualTestContext.configuration).toBe(
         (actualContext as any).configuration,
