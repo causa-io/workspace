@@ -3,6 +3,7 @@ import { resolve } from 'path';
 import { type Logger, pino } from 'pino';
 import type {
   ConfigurationGetOptions,
+  ConfigurationValueSource,
   GetFieldType,
   RawConfiguration,
 } from '../configuration/index.js';
@@ -249,6 +250,20 @@ export class WorkspaceContext {
     options?: ConfigurationGetOptions,
   ): Exclude<GetFieldType<BaseConfiguration, TPath>, undefined> {
     return this.configuration.getOrThrow(path, options);
+  }
+
+  /**
+   * Returns the raw configuration a value at a given path comes from, e.g. to point to the file declaring it.
+   * See {@link ConfigurationReader.getSource} for more details.
+   *
+   * @param path The path to the value in the configuration object.
+   * @returns The raw configuration and the path to the value within it, or `undefined` if no raw configuration
+   *   defines the value.
+   */
+  getSource(
+    path: string,
+  ): ConfigurationValueSource<BaseConfiguration> | undefined {
+    return this.configuration.getSource(path);
   }
 
   /**

@@ -107,6 +107,14 @@ describe('WorkspaceContext', () => {
         },
       ]);
       expect(actualExternalPaths).toBeEmpty();
+      expect(actualContext.getSource('project.name')).toEqual({
+        rawConfiguration: {
+          sourceType: ConfigurationReaderSourceType.File,
+          source: join(tmpDir, 'project', 'causa.yaml'),
+          configuration: projectConfiguration,
+        },
+        path: ['project', 'name'],
+      });
     });
 
     it('should throw when the project and environment are not set', async () => {

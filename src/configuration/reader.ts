@@ -1,5 +1,12 @@
 import type { GetFieldType } from 'lodash';
-import { cloneDeep, get, isArray, mergeWith } from 'lodash-es';
+import {
+  cloneDeep,
+  get,
+  isArray,
+  isPlainObject,
+  mergeWith,
+  toPath,
+} from 'lodash-es';
 import {
   CircularTemplateReferenceError,
   ConfigurationValueNotFoundError,
@@ -36,6 +43,23 @@ export enum ConfigurationReaderSourceType {
    */
   File = 'file',
 }
+
+/**
+ * The raw configuration defining a value, as returned by {@link ConfigurationReader.getSource}.
+ */
+export type ConfigurationValueSource<T> = {
+  /**
+   * The raw configuration defining the value.
+   */
+  readonly rawConfiguration: RawConfiguration<T>;
+
+  /**
+   * The path to the value within the raw configuration.
+   * It differs from the requested path when it goes through an array concatenated from several raw configurations,
+   * in which case the array index is relative to the raw configuration.
+   */
+  readonly path: (string | number)[];
+};
 
 /**
  * Recursively makes all properties partial in the given type.
@@ -190,6 +214,70 @@ export class ConfigurationReader<T extends object> {
         ),
       } as ConfigurationReaderOptions<T>,
     );
+  }
+
+  /**
+   * Returns the raw configuration a value at a given path comes from, e.g. to point to the file declaring it.
+   * This follows how raw configurations are merged: a primitive value comes from the last raw configuration defining
+   * it, and an array element from the raw configuration whose array contains it, as arrays are concatenated.
+   * An object or array can be merged from several raw configurations, in which case the last one defining it is
+   * returned, although others also contribute to it.
+   *
+   * @param path The path to the value.
+   * @returns The raw configuration and the path to the value within it, or `undefined` if no raw configuration defines
+   *   the value.
+   */
+  getSource(path: string): ConfigurationValueSource<T> | undefined {
+    const segments = toPath(path);
+    let candidates: ({ value: any } & ConfigurationValueSource<T>)[] =
+      this.rawConfigurations.map((rawConfiguration) => ({
+        rawConfiguration,
+        value: rawConfiguration.configuration,
+        path: [],
+      }));
+
+    segments.forEach((segment, depth) => {
+      const merged = get(this.configuration, segments.slice(0, depth));
+      const index = Number(segment);
+      if (isArray(merged) && Number.isInteger(index) && index >= 0) {
+        let offset = 0;
+        const candidate = candidates.find(({ value }) => {
+          if (!isArray(value)) {
+            return false;
+          }
+
+          if (index < offset + value.length) {
+            return true;
+          }
+
+          offset += value.length;
+          return false;
+        });
+        candidates = candidate
+          ? [
+              {
+                ...candidate,
+                value: candidate.value[index - offset],
+                path: [...candidate.path, index - offset],
+              },
+            ]
+          : [];
+        return;
+      }
+
+      candidates = candidates
+        .filter(({ value }) => isPlainObject(value) && segment in value)
+        .map(({ value, path, rawConfiguration }) => ({
+          rawConfiguration,
+          value: value[segment],
+          path: [...path, segment],
+        }));
+    });
+
+    const source = candidates.findLast(({ value }) => value !== undefined);
+    return source
+      ? { rawConfiguration: source.rawConfiguration, path: source.path }
+      : undefined;
   }
 
   /**

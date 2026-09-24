@@ -135,6 +135,78 @@ describe('ConfigurationReader', () => {
     });
   });
 
+  describe('getSource', () => {
+    const first: RawConfiguration<any> = {
+      sourceType: ConfigurationReaderSourceType.File,
+      source: 'causa.yaml',
+      configuration: {
+        project: { name: 'root', outputs: { 'google.spanner': ['a'] } },
+        list: ['a', 'b'],
+      },
+    };
+    const second: RawConfiguration<any> = {
+      sourceType: ConfigurationReaderSourceType.File,
+      source: 'project/causa.yaml',
+      configuration: {
+        project: { description: '📝' },
+        list: ['c'],
+        other: { value: null },
+      },
+    };
+    const sourceReader = new ConfigurationReader<any>([first, second]);
+
+    it('should return the last raw configuration defining the value', () => {
+      expect(sourceReader.getSource('project.name')).toEqual({
+        rawConfiguration: first,
+        path: ['project', 'name'],
+      });
+      expect(sourceReader.getSource('project')).toEqual({
+        rawConfiguration: second,
+        path: ['project'],
+      });
+      expect(sourceReader.getSource('other.value')).toEqual({
+        rawConfiguration: second,
+        path: ['other', 'value'],
+      });
+    });
+
+    it('should support keys containing dots', () => {
+      expect(
+        sourceReader.getSource('project.outputs["google.spanner"][0]'),
+      ).toEqual({
+        rawConfiguration: first,
+        path: ['project', 'outputs', 'google.spanner', 0],
+      });
+      expect(
+        sourceReader.getSource('project.outputs["google.spanner"]'),
+      ).toEqual({
+        rawConfiguration: first,
+        path: ['project', 'outputs', 'google.spanner'],
+      });
+    });
+
+    it('should resolve indices of concatenated arrays to the raw configuration defining the element', () => {
+      expect(sourceReader.getSource('list[1]')).toEqual({
+        rawConfiguration: first,
+        path: ['list', 1],
+      });
+      expect(sourceReader.getSource('list[2]')).toEqual({
+        rawConfiguration: second,
+        path: ['list', 0],
+      });
+      expect(sourceReader.getSource('list')).toEqual({
+        rawConfiguration: second,
+        path: ['list'],
+      });
+    });
+
+    it('should return undefined when no raw configuration defines the value', () => {
+      expect(sourceReader.getSource('project.nope')).toBeUndefined();
+      expect(sourceReader.getSource('list[3]')).toBeUndefined();
+      expect(sourceReader.getSource('list.nope')).toBeUndefined();
+    });
+  });
+
   describe('getOrThrow', () => {
     it('should return a value that exists', () => {
       const actualValue = reader.get('nested.setting2');
