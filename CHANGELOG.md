@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+Features:
+
+- Support domains in the workspace configuration. A domain is defined by the `domain.name` configuration, and groups the projects and files located in its folder. The domain of the context is exposed as `WorkspaceContext.domainPath`, and domains can be listed using `WorkspaceContext.listDomainPaths`.
+
 ## v1.1.0 (2026-09-18)
 
 Features:
