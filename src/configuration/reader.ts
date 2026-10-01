@@ -423,6 +423,20 @@ export class ConfigurationReader<T extends object> {
   }
 
   /**
+   * Renders a value that is not part of the configuration, by recursively walking it and processing templates. The
+   * templates are processed as if the value was in the configuration, i.e. they use the same template key, and can
+   * reference configuration values using the `configuration` data fetcher.
+   * See {@link ConfigurationReader.getAndRender} for more information about rendering.
+   *
+   * @param dataFetchers The data fetchers to use for rendering.
+   * @param value The value to render, e.g. `{ $format: "${ configuration('key1') }" }`.
+   * @returns The value after rendering.
+   */
+  async render(dataFetchers: DataFetchers, value: unknown): Promise<any> {
+    return await this.renderWithStack(dataFetchers, value, []);
+  }
+
+  /**
    * This recursively renders the configuration or one of its child objects.
    * This method checks for circular references in templates within the configuration, when accessed using the
    * builtin `configuration` fetcher.
@@ -437,8 +451,27 @@ export class ConfigurationReader<T extends object> {
     path: string | undefined,
     pathStack: string[],
   ): Promise<any> {
-    const value = this.unsafeGet(path);
+    return await this.renderWithStack(
+      dataFetchers,
+      this.unsafeGet(path),
+      pathStack,
+    );
+  }
 
+  /**
+   * Recursively renders the given value, providing the `configuration` data fetcher, which checks for circular
+   * references in templates within the configuration.
+   *
+   * @param dataFetchers The data fetchers to use for rendering.
+   * @param value The value to render.
+   * @param pathStack The list of paths in the configuration for which a rendering has occurred.
+   * @returns The value after rendering.
+   */
+  private async renderWithStack(
+    dataFetchers: DataFetchers,
+    value: unknown,
+    pathStack: string[],
+  ): Promise<any> {
     const renderer = new AsyncTemplateRenderer(this.templateKey, {
       ...dataFetchers,
       configuration: (path: string) => {

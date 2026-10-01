@@ -303,6 +303,45 @@ describe('ConfigurationReader', () => {
     });
   });
 
+  describe('render', () => {
+    it('should render a value that is not part of the configuration', async () => {
+      const actualValue = await reader.render(
+        { human: async (h) => (h === 'bob' ? '👨' : '👩') },
+        {
+          greeting: {
+            [TEMPLATE_KEY]:
+              "Hello ${ human('bob') } and ${ configuration('setting1') }!",
+          },
+          other: ['🎉'],
+        },
+      );
+
+      expect(actualValue).toEqual({
+        greeting: 'Hello 👨 and first value!',
+        other: ['🎉'],
+      });
+    });
+
+    it('should throw when a referenced configuration has a circular reference', async () => {
+      const badReader = reader.mergedWith({
+        sourceType: ConfigurationReaderSourceType.File,
+        source: 'template-file.json',
+        configuration: {
+          setting1: { [TEMPLATE_KEY]: "${ configuration('setting1') }" } as any,
+        },
+      });
+
+      const actualPromise = badReader.render(
+        {},
+        { [TEMPLATE_KEY]: "${ configuration('setting1') }" },
+      );
+
+      await expect(actualPromise).rejects.toThrow(
+        CircularTemplateReferenceError,
+      );
+    });
+  });
+
   describe('getAndRenderOrThrow', () => {
     it('should return a value that exists', async () => {
       const actualValue = await reader.getAndRenderOrThrow(

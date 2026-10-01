@@ -322,6 +322,26 @@ export class WorkspaceContext {
   }
 
   /**
+   * Renders a value that is not part of the configuration, by recursively walking it and processing templates. The
+   * templates are processed as if the value was in the configuration, e.g. `{ $format: "${ configuration('key') }" }`.
+   *
+   * @param value The value to render.
+   * @param options Options for rendering.
+   * @returns The value after rendering.
+   */
+  async render(
+    value: unknown,
+    options: GetAndRenderOptions = {},
+  ): Promise<any> {
+    const { renderSecrets = true } = options;
+
+    return await this.configuration.render(
+      { secret: async (id: string) => (renderSecrets ? this.secret(id) : '') },
+      value,
+    );
+  }
+
+  /**
    * Returns an object that can be used to get configuration values with project-specific types.
    * This is simply syntactic sugar for TypeScript, and does not actually enforce the configuration types.
    *
