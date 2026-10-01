@@ -14,6 +14,7 @@ import type { FileReader } from '../file-utils.js';
 import type { BaseConfiguration } from './base-configuration.js';
 import {
   WorkspaceConfigurationSourceType,
+  listDomainPaths,
   listProjectPaths,
   loadWorkspaceConfiguration,
   makeProcessorConfiguration,
@@ -57,6 +58,7 @@ describe('configuration', () => {
         configuration: expect.any(ConfigurationReader),
         rootPath: tmpDir,
         projectPath: null,
+        domainPath: null,
       });
       expect(actualConfiguration.configuration.get()).toEqual(
         expectedConfiguration,
@@ -123,6 +125,7 @@ describe('configuration', () => {
         configuration: expect.any(ConfigurationReader),
         rootPath: tmpDir,
         projectPath: null,
+        domainPath: null,
       });
       expect(actualConfiguration.configuration.get()).toEqual(
         expectedConfiguration,
@@ -175,6 +178,7 @@ describe('configuration', () => {
         configuration: expect.any(ConfigurationReader),
         rootPath: tmpDir,
         projectPath: null,
+        domainPath: null,
       });
       expect(actualConfiguration.configuration.get({ unsafe: true })).toEqual(
         expectedConfiguration,
@@ -222,6 +226,7 @@ describe('configuration', () => {
         configuration: expect.any(ConfigurationReader),
         rootPath: tmpDir,
         projectPath: expectedProjectDir,
+        domainPath: null,
       });
       expect(actualConfiguration.configuration.get()).toEqual(
         expectedConfiguration,
@@ -238,6 +243,58 @@ describe('configuration', () => {
           configuration: projectConfiguration,
         },
       ]);
+    });
+
+    it('should infer the domain path', async () => {
+      await writeConfiguration(tmpDir, './causa.yaml', {
+        workspace: { name: 'my-workspace' },
+      });
+      await writeConfiguration(tmpDir, './domain/causa.yaml', {
+        domain: { name: 'My domain' },
+      });
+      await writeConfiguration(tmpDir, './domain/project/causa.yaml', {
+        project: { name: 'my-project', type: '🐍', language: '🇫🇷' },
+      });
+      const expectedDomainDir = join(tmpDir, 'domain');
+      const expectedProjectDir = join(expectedDomainDir, 'project');
+
+      const actualConfiguration = await loadWorkspaceConfiguration(
+        expectedProjectDir,
+        null,
+        logger,
+      );
+
+      expect(actualConfiguration).toEqual({
+        configuration: expect.any(ConfigurationReader),
+        rootPath: tmpDir,
+        projectPath: expectedProjectDir,
+        domainPath: expectedDomainDir,
+      });
+      expect(actualConfiguration.configuration.get('domain.name')).toEqual(
+        'My domain',
+      );
+    });
+
+    it('should throw when domains are nested', async () => {
+      await writeConfiguration(tmpDir, './causa.yaml', {
+        workspace: { name: 'my-workspace' },
+      });
+      await writeConfiguration(tmpDir, './domain/causa.yaml', {
+        domain: { name: 'My domain' },
+      });
+      await writeConfiguration(tmpDir, './domain/nested/causa.yaml', {
+        domain: { name: 'My nested domain' },
+      });
+
+      const actualPromise = loadWorkspaceConfiguration(
+        join(tmpDir, 'domain', 'nested'),
+        null,
+        logger,
+      );
+
+      await expect(actualPromise).rejects.toThrow(
+        InvalidWorkspaceConfigurationFilesError,
+      );
     });
 
     it('should use the provided file reader to load configurations', async () => {
@@ -388,6 +445,51 @@ describe('configuration', () => {
       expect(actualPaths).toIncludeSameMembers([
         join(tmpDir, 'project1'),
         join(tmpDir, 'project2'),
+      ]);
+    });
+  });
+
+  describe('listDomainPaths', () => {
+    let tmpDir: string;
+
+    beforeEach(async () => {
+      tmpDir = resolve(await mkdtemp('causa-tests-'));
+    });
+
+    afterEach(async () => {
+      await rm(tmpDir, { recursive: true, force: true });
+    });
+
+    it('should return an empty list when no domain is defined', async () => {
+      await writeConfiguration(tmpDir, './causa.yaml', {
+        workspace: { name: 'my-workspace' },
+        project: { name: 'my-project', type: '🐍', language: '🇫🇷' },
+      });
+
+      const actualPaths = await listDomainPaths(tmpDir);
+
+      expect(actualPaths).toBeEmpty();
+    });
+
+    it('should return the paths of domains', async () => {
+      await writeConfiguration(tmpDir, './causa.yaml', {
+        workspace: { name: 'my-workspace' },
+      });
+      await writeConfiguration(tmpDir, './domain1/causa.yaml', {
+        domain: { name: 'Domain 1' },
+      });
+      await writeConfiguration(tmpDir, './domain1/project/causa.yaml', {
+        project: { name: 'my-project', type: '🐍', language: '🇫🇷' },
+      });
+      await writeConfiguration(tmpDir, './domain2/causa.domain.yaml', {
+        domain: { name: 'Domain 2' },
+      });
+
+      const actualPaths = await listDomainPaths(tmpDir);
+
+      expect(actualPaths).toIncludeSameMembers([
+        join(tmpDir, 'domain1'),
+        join(tmpDir, 'domain2'),
       ]);
     });
   });

@@ -57,6 +57,22 @@ properties:
           This is a hint to various processes (e.g. project changes detection, linting, etc.) that they should also
           consider those files and directories when running operations against the project.
 
+  domain:
+    title: Domain
+    type: object
+    description: |-
+      Information about the domain within the workspace. A domain groups the projects and files located in its folder.
+      The file defining `domain.name` should be located at the root of the domain.
+      Its location will be used to determine the domain path. Domains cannot be nested.
+    properties:
+      name:
+        type: string
+        description: The name of the domain.
+
+      description:
+        type: string
+        description: A description for the domain.
+
   causa:
     title: Causa
     type: object

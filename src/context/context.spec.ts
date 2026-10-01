@@ -66,6 +66,7 @@ describe('WorkspaceContext', () => {
       expect(actualContext.workingDirectory).toEqual(expectedProjectDir);
       expect(actualContext.rootPath).toEqual(tmpDir);
       expect(actualContext.projectPath).toEqual(expectedProjectDir);
+      expect(actualContext.domainPath).toBeNull();
       expect(actualContext.getProjectPathOrThrow()).toEqual(expectedProjectDir);
       expect(actualContext.getEnvironmentOrThrow()).toEqual('dev');
       expect(actualContext.get('myService.myValue')).toEqual('🎉');
@@ -231,6 +232,34 @@ describe('WorkspaceContext', () => {
       expect(actualProjectPaths).toIncludeSameMembers([
         join(tmpDir, 'project'),
         join(tmpDir, 'project2'),
+      ]);
+    });
+  });
+
+  describe('listDomainPaths', () => {
+    it('should return the list of domain paths', async () => {
+      await writeConfiguration(tmpDir, './causa.yaml', {
+        workspace: { name: 'my-workspace' },
+      });
+      await writeConfiguration(tmpDir, './domain/causa.yaml', {
+        domain: { name: 'My domain' },
+      });
+      await writeConfiguration(tmpDir, './domain/project/causa.yaml', {
+        project: { name: 'my-project', type: '🐍', language: '🇫🇷' },
+      });
+      await writeConfiguration(tmpDir, './domain2/causa.yaml', {
+        domain: { name: 'My other domain' },
+      });
+      const context = await WorkspaceContext.init({
+        workingDirectory: join(tmpDir, 'domain', 'project'),
+      });
+
+      const actualDomainPaths = await context.listDomainPaths();
+
+      expect(context.domainPath).toEqual(join(tmpDir, 'domain'));
+      expect(actualDomainPaths).toIncludeSameMembers([
+        join(tmpDir, 'domain'),
+        join(tmpDir, 'domain2'),
       ]);
     });
   });

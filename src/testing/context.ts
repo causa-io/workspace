@@ -70,6 +70,12 @@ export function createContext(
     projectPath?: string | null;
 
     /**
+     * The domain path for the context. Defaults to `null`.
+     * This is **not** inferred from the configuration.
+     */
+    domainPath?: string | null;
+
+    /**
      * The configuration for the context. Defaults to a configuration where only `workspace.name` is set to `test`.
      * If a plain object is passed, it is loaded as a (fake) configuration file.
      */
@@ -96,6 +102,7 @@ export function createContext(
   const rootPath = resolve(options.rootPath ?? workingDirectory);
   const projectPath =
     options.projectPath !== undefined ? options.projectPath : workingDirectory;
+  const domainPath = options.domainPath ?? null;
 
   const configuration =
     options.configuration instanceof ConfigurationReader
@@ -122,6 +129,7 @@ export function createContext(
     environment,
     rootPath,
     projectPath,
+    domainPath,
     configuration,
     functionRegistry,
     processors,
