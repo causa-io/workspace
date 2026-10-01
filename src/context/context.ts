@@ -3,6 +3,7 @@ import { resolve } from 'path';
 import { type Logger, pino } from 'pino';
 import type {
   ConfigurationGetOptions,
+  ConfigurationValueSource,
   GetFieldType,
   RawConfiguration,
 } from '../configuration/index.js';
@@ -252,6 +253,20 @@ export class WorkspaceContext {
   }
 
   /**
+   * Returns the raw configuration a value at a given path comes from, e.g. to point to the file declaring it.
+   * See {@link ConfigurationReader.getSource} for more details.
+   *
+   * @param path The path to the value in the configuration object.
+   * @returns The raw configuration and the path to the value within it, or `undefined` if no raw configuration
+   *   defines the value.
+   */
+  getSource(
+    path: string,
+  ): ConfigurationValueSource<BaseConfiguration> | undefined {
+    return this.configuration.getSource(path);
+  }
+
+  /**
    * Returns the entire configuration for the current context, after rendering all templates.
    *
    * @param options Options for rendering.
@@ -303,6 +318,26 @@ export class WorkspaceContext {
     return await this.configuration.getAndRenderOrThrow(
       { secret: async (id: string) => (renderSecrets ? this.secret(id) : '') },
       path,
+    );
+  }
+
+  /**
+   * Renders a value that is not part of the configuration, by recursively walking it and processing templates. The
+   * templates are processed as if the value was in the configuration, e.g. `{ $format: "${ configuration('key') }" }`.
+   *
+   * @param value The value to render.
+   * @param options Options for rendering.
+   * @returns The value after rendering.
+   */
+  async render(
+    value: unknown,
+    options: GetAndRenderOptions = {},
+  ): Promise<any> {
+    const { renderSecrets = true } = options;
+
+    return await this.configuration.render(
+      { secret: async (id: string) => (renderSecrets ? this.secret(id) : '') },
+      value,
     );
   }
 

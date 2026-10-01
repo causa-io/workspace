@@ -107,6 +107,14 @@ describe('WorkspaceContext', () => {
         },
       ]);
       expect(actualExternalPaths).toBeEmpty();
+      expect(actualContext.getSource('project.name')).toEqual({
+        rawConfiguration: {
+          sourceType: ConfigurationReaderSourceType.File,
+          source: join(tmpDir, 'project', 'causa.yaml'),
+          configuration: projectConfiguration,
+        },
+        path: ['project', 'name'],
+      });
     });
 
     it('should throw when the project and environment are not set', async () => {
@@ -700,6 +708,20 @@ describe('WorkspaceContext', () => {
 
       expect(actualValue).toEqual('🎉');
       expect(actualValue2).toEqual('🎉');
+    });
+
+    it('should render a value that is not part of the configuration', async () => {
+      const value = {
+        $format: "${ secret('mySecret') }${ configuration('otherValue') }",
+      };
+
+      const actualValue = await context.render(value);
+      const actualValueWithoutSecrets = await context.render(value, {
+        renderSecrets: false,
+      });
+
+      expect(actualValue).toEqual(await context.getAndRender('someValue'));
+      expect(actualValueWithoutSecrets).toEqual('🎉');
     });
   });
 

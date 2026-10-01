@@ -5,6 +5,8 @@
 Features:
 
 - Support domains in the workspace configuration. A domain is defined by the `domain.name` configuration, and groups the projects and files located in its folder. The domain of the context is exposed as `WorkspaceContext.domainPath`, and domains can be listed using `WorkspaceContext.listDomainPaths`.
+- Add `ConfigurationReader.getSource` and `WorkspaceContext.getSource`, returning the raw configuration (e.g. the file) defining a configuration value, along with the path to the value within it.
+- Add `ConfigurationReader.render` and `WorkspaceContext.render`, rendering templates in a value that is not part of the configuration, as if it was.
 
 ## v1.1.0 (2026-09-18)
 

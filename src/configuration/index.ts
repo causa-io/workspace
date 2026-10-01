@@ -5,6 +5,7 @@ export {
 } from './reader.js';
 export type {
   ConfigurationGetOptions,
+  ConfigurationValueSource,
   GetFieldType,
   PartialConfiguration,
   RawConfiguration,
