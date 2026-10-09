@@ -1,5 +1,6 @@
 import { plainToInstance } from 'class-transformer';
-import { ValidationError, parseObject } from '../validation/index.js';
+import { ValidationError, validateObject } from '../validation/index.js';
+import { assignArguments } from './arguments.js';
 import {
   ImplementableFunction,
   type ImplementableFunctionArguments,
@@ -14,6 +15,7 @@ import {
   NoImplementationFoundError,
   TooManyImplementationsError,
 } from './errors.js';
+import { passesArgumentsByReference } from './pass-arguments-by-reference.decorator.js';
 
 /**
  * Holds the full definition of a function and all its known implementations.
@@ -193,9 +195,17 @@ export class FunctionRegistry<C extends object> {
       typeof definition === 'string'
         ? this.getRegisteredFunctionByName(definition)
         : this.getMatchingRegisteredFunction(definition);
-    return (registeredFunction?.implementations ?? [])
+    if (!registeredFunction) {
+      return [];
+    }
+
+    return registeredFunction.implementations
       .map((ctor) => {
-        const instance = plainToInstance(ctor, args);
+        const instance = this.createInstance(
+          registeredFunction.definition,
+          ctor,
+          args,
+        );
         (instance as { _context: C })._context = context;
         return instance;
       })
@@ -262,7 +272,8 @@ export class FunctionRegistry<C extends object> {
 
     try {
       const { definition } = registeredFunction;
-      await parseObject(definition as any, args);
+      const instance = this.createInstance(definition, definition as any, args);
+      await validateObject(instance);
       return definition;
     } catch (error) {
       if (error instanceof ValidationError) {
@@ -275,6 +286,27 @@ export class FunctionRegistry<C extends object> {
 
       throw error;
     }
+  }
+
+  /**
+   * Creates an instance of a function definition or implementation, with the given arguments.
+   * By default, arguments are copied and transformed using `class-transformer`. If the definition is decorated with
+   * {@link PassArgumentsByReference}, arguments are assigned to the instance as is.
+   *
+   * @param definition The constructor of the abstract class defining the function.
+   * @param constructor The constructor of the class to instantiate.
+   *   This is usually an implementation, but can be the definition itself, e.g. for validation.
+   * @param args The arguments for the function.
+   * @returns The created instance.
+   */
+  private createInstance<D extends ImplementableFunction<C, any>>(
+    definition: ImplementableFunctionDefinitionConstructor<D>,
+    constructor: ImplementableFunctionImplementationConstructor<D>,
+    args: ImplementableFunctionArguments<D>,
+  ): D {
+    return passesArgumentsByReference(definition)
+      ? assignArguments(constructor, args)
+      : plainToInstance(constructor, args);
   }
 
   private getMatchingRegisteredFunction<
