@@ -2,12 +2,14 @@ import { mkdir, mkdtemp, rm, symlink, writeFile } from 'fs/promises';
 import 'jest-extended';
 import { tmpdir } from 'os';
 import { join, resolve } from 'path';
+import { pino } from 'pino';
 import { fileURLToPath } from 'url';
 import {
   ConfigurationReaderSourceType,
   ConfigurationValueNotFoundError,
   type PartialConfiguration,
 } from '../configuration/index.js';
+import { DEFAULT_FILE_READER } from '../file-utils.js';
 import { InvalidFunctionArgumentError } from '../function-registry/index.js';
 import type { BaseConfiguration } from './base-configuration.js';
 import { WorkspaceContext } from './context.js';
@@ -366,6 +368,123 @@ describe('WorkspaceContext', () => {
       expect(actualContext.get('myProcessorConf')).toBeUndefined();
       expect(baseContext.processors).toEqual([firstProcessor]);
       expect(actualContext.processors).toBeEmpty();
+    });
+
+    it('should keep the current values for options explicitly set to `undefined`', async () => {
+      await writeConfiguration(tmpDir, './causa.yaml', {
+        workspace: { name: 'my-workspace' },
+        environments: { dev: { name: 'Dev' } },
+      });
+      await writeConfiguration(tmpDir, './project/causa.yaml', {
+        project: { name: 'my-project', type: '🐍', language: '🇫🇷' },
+      });
+      const expectedProjectDir = join(tmpDir, 'project');
+      const baseContext = await WorkspaceContext.init({
+        workingDirectory: expectedProjectDir,
+        environment: 'dev',
+      });
+
+      const actualContext = await baseContext.clone({
+        workingDirectory: undefined,
+        environment: undefined,
+        logger: undefined,
+      });
+
+      expect(actualContext).not.toBe(baseContext);
+      expect(actualContext.workingDirectory).toEqual(expectedProjectDir);
+      expect(actualContext.environment).toEqual('dev');
+      expect(actualContext.logger).toBe(baseContext.logger);
+    });
+
+    it('should return the current context when the options do not change it and `reuseIfUnchanged` is set', async () => {
+      await writeConfiguration(tmpDir, './causa.yaml', {
+        workspace: { name: 'my-workspace' },
+        environments: { dev: { name: 'Dev' } },
+      });
+      const baseContext = await WorkspaceContext.init({
+        workingDirectory: tmpDir,
+        environment: 'dev',
+      });
+
+      const actualContexts = await Promise.all([
+        baseContext.clone({ reuseIfUnchanged: true }),
+        baseContext.clone({
+          workingDirectory: tmpDir,
+          environment: 'dev',
+          logger: baseContext.logger,
+          processors: [],
+          reuseIfUnchanged: true,
+        }),
+        baseContext.clone({ processors: null, reuseIfUnchanged: true }),
+      ]);
+
+      actualContexts.forEach((c) => expect(c).toBe(baseContext));
+    });
+
+    it('should return a new context when the options change it, even if `reuseIfUnchanged` is set', async () => {
+      const configuration: PartialConfiguration<BaseConfiguration> & {
+        [k: string]: any;
+      } = {
+        workspace: { name: 'my-workspace' },
+        environments: { dev: { name: 'Dev' } },
+        causa: {
+          modules: {
+            [fileURLToPath(
+              new URL('./context.processor.module.test.ts', import.meta.url),
+            )]: 'file:/path',
+          },
+        },
+      };
+      await writeConfiguration(tmpDir, './causa.yaml', configuration);
+      await writeConfiguration(tmpDir, './project/causa.yaml', {
+        project: { name: 'my-project', type: '🐍', language: '🇫🇷' },
+      });
+      const firstProcessor = { name: 'MyProcessor', args: { value: '🔧' } };
+      const secondProcessor = {
+        name: 'MyOtherProcessor',
+        args: { value: '👽' },
+      };
+      const baseContext = await WorkspaceContext.init({
+        workingDirectory: tmpDir,
+        environment: 'dev',
+        processors: [firstProcessor],
+      });
+      const projectDir = join(tmpDir, 'project');
+
+      const actualContexts = await Promise.all([
+        baseContext.clone({
+          workingDirectory: projectDir,
+          reuseIfUnchanged: true,
+        }),
+        baseContext.clone({ environment: null, reuseIfUnchanged: true }),
+        baseContext.clone({ logger: pino(), reuseIfUnchanged: true }),
+        baseContext.clone({ processors: null, reuseIfUnchanged: true }),
+        baseContext.clone({
+          processors: [secondProcessor],
+          reuseIfUnchanged: true,
+        }),
+        baseContext.clone({
+          fileReader: DEFAULT_FILE_READER,
+          reuseIfUnchanged: true,
+        }),
+      ]);
+
+      actualContexts.forEach((c) => expect(c).not.toBe(baseContext));
+      const [
+        workingDirectoryContext,
+        environmentContext,
+        loggerContext,
+        noProcessorContext,
+        processorContext,
+      ] = actualContexts;
+      expect(workingDirectoryContext.workingDirectory).toEqual(projectDir);
+      expect(environmentContext.environment).toBeNull();
+      expect(loggerContext.logger).not.toBe(baseContext.logger);
+      expect(noProcessorContext.processors).toBeEmpty();
+      expect(processorContext.processors).toEqual([
+        firstProcessor,
+        secondProcessor,
+      ]);
     });
   });
 
