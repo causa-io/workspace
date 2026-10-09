@@ -71,6 +71,19 @@ export type WorkspaceContextOptions = {
 } & FileReaderOption;
 
 /**
+ * Options when cloning a {@link WorkspaceContext}.
+ */
+export type WorkspaceContextCloneOptions = WorkspaceContextOptions & {
+  /**
+   * If `true`, the current context is returned rather than a new one when the options do not change it, i.e. when the
+   * working directory, environment, and logger are the same, and no processor is added or removed.
+   * In this case, the configuration is not reloaded, and the service cache is shared.
+   * Passing a `fileReader` always results in a new context.
+   */
+  reuseIfUnchanged?: boolean;
+};
+
+/**
  * Options for {@link WorkspaceContext.getAndRender} and related methods.
  */
 export type GetAndRenderOptions = {
@@ -506,22 +519,48 @@ export class WorkspaceContext {
    * Returns a new context configured identically to this one, unless specified by `options`.
    *
    * @param options Parameters to override when initializing the context.
-   *   Options that are not specified will default to the values of the current context.
+   *   Options that are not specified (or `undefined`) will default to the values of the current context.
    *   Processors are appended to the existing list of processors.
-   * @returns The cloned {@link WorkspaceContext}.
+   * @returns The cloned {@link WorkspaceContext}, or the current one if `reuseIfUnchanged` is set and the options do
+   *   not change it.
    */
   async clone(
-    options: WorkspaceContextOptions = {},
+    options: WorkspaceContextCloneOptions = {},
   ): Promise<WorkspaceContext> {
+    const { reuseIfUnchanged, fileReader, ...initOptions } = options;
+    const workingDirectory = resolve(
+      initOptions.workingDirectory ?? this.workingDirectory,
+    );
+    const environment =
+      initOptions.environment === undefined
+        ? this.environment
+        : initOptions.environment;
+    const logger = initOptions.logger ?? this.logger;
+    const processorsUnchanged =
+      initOptions.processors === null
+        ? this.processors.length === 0
+        : (initOptions.processors ?? []).length === 0;
+
+    if (
+      reuseIfUnchanged &&
+      workingDirectory === this.workingDirectory &&
+      environment === this.environment &&
+      logger === this.logger &&
+      processorsUnchanged &&
+      fileReader === undefined
+    ) {
+      return this;
+    }
+
     return await WorkspaceContext.init({
-      workingDirectory: this.workingDirectory,
-      environment: this.environment,
-      logger: this.logger,
-      ...options,
+      workingDirectory,
+      environment,
+      logger,
+      fileReader,
       processors:
-        options.processors === null
+        initOptions.processors === null
           ? []
-          : [...this.processors, ...(options.processors ?? [])],
+          : [...this.processors, ...(initOptions.processors ?? [])],
     });
   }
 

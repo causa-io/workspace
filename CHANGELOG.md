@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+Features:
+
+- Add the `PassArgumentsByReference` decorator for function definitions. When a definition is decorated, arguments are assigned as is to implementations rather than being copied and transformed using `class-transformer`, and they are validated without being transformed.
+- Add `validateObject`, which validates an object that has already been created, without transforming it.
+- Add the `reuseIfUnchanged` option to `WorkspaceContext.clone`, which returns the current context rather than a new one when the options do not change it.
+
+Fixes:
+
+- Treat options explicitly set to `undefined` in `WorkspaceContext.clone` as unspecified, such that they default to the values of the current context rather than e.g. removing the environment.
+
 ## v1.2.0 (2026-10-01)
 
 Features:

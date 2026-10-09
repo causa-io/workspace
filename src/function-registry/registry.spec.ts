@@ -1,5 +1,7 @@
-import { IsEmail } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsDate, IsEmail, IsObject } from 'class-validator';
 import 'jest-extended';
+import { AllowMissing } from '../validation/index.js';
 import { ImplementableFunction } from './definition.js';
 import {
   FunctionDefinitionDoesNotMatchError,
@@ -8,6 +10,7 @@ import {
   NoImplementationFoundError,
   TooManyImplementationsError,
 } from './errors.js';
+import { PassArgumentsByReference } from './pass-arguments-by-reference.decorator.js';
 import { FunctionRegistry } from './registry.js';
 
 abstract class MyDef extends ImplementableFunction<any, string> {
@@ -46,6 +49,59 @@ class MyImpl3 extends MyDef2 {
   }
   _supports(): boolean {
     return true;
+  }
+}
+
+abstract class MyCopyingDef extends ImplementableFunction<any, string> {
+  @IsObject()
+  object!: Record<string, any>;
+
+  @Transform(({ value }) =>
+    typeof value === 'string' ? new Date(value) : value,
+  )
+  @IsDate()
+  @AllowMissing()
+  date?: Date;
+}
+
+class MyCopyingImpl extends MyCopyingDef {
+  _call(): string {
+    return '📄';
+  }
+
+  _supports(): boolean {
+    return true;
+  }
+}
+
+@PassArgumentsByReference()
+abstract class MyByReferenceDef extends ImplementableFunction<any, string> {
+  @IsObject()
+  object!: Record<string, any>;
+
+  @Transform(({ value }) =>
+    typeof value === 'string' ? new Date(value) : value,
+  )
+  @IsDate()
+  @AllowMissing()
+  date?: Date;
+}
+
+class MyByReferenceImpl extends MyByReferenceDef {
+  _call(): string {
+    return '🔗';
+  }
+
+  _supports(): boolean {
+    return true;
+  }
+
+  helper(): string {
+    return '🛟';
+  }
+
+  get readOnly(): string {
+    return '🔒';
   }
 }
 
@@ -199,6 +255,60 @@ describe('FunctionRegistry', () => {
 
       expect(actualImplementations).toBeEmpty();
     });
+
+    it('should copy and transform arguments by default', () => {
+      registry.registerImplementations(MyCopyingImpl);
+      const object = { nested: '🪆' };
+
+      const [actualImplementation] = registry.getImplementations(
+        MyCopyingDef,
+        { object, date: '2026-01-01T00:00:00.000Z' as any },
+        {},
+      );
+
+      expect(actualImplementation).toBeInstanceOf(MyCopyingImpl);
+      expect(actualImplementation.object).toEqual(object);
+      expect(actualImplementation.object).not.toBe(object);
+      expect(actualImplementation.date).toEqual(
+        new Date('2026-01-01T00:00:00.000Z'),
+      );
+    });
+
+    it('should pass arguments by reference when the definition is decorated with PassArgumentsByReference', () => {
+      registry.registerImplementations(MyByReferenceImpl);
+      const args = { object: { nested: '🪆' }, date: '📅' as any };
+
+      const [actualImplementation] = registry.getImplementations(
+        MyByReferenceDef,
+        args,
+        {},
+      );
+
+      expect(actualImplementation).toBeInstanceOf(MyByReferenceImpl);
+      expect(actualImplementation).not.toBe(args);
+      expect(actualImplementation.object).toBe(args.object);
+      expect(actualImplementation.date).toBe('📅');
+    });
+
+    it('should not overwrite the prototype, methods, or read-only properties when passing arguments by reference', () => {
+      registry.registerImplementations(MyByReferenceImpl);
+      const args = JSON.parse(
+        '{ "object": {}, "__proto__": { "_call": "💥" }, "constructor": "💥", "_call": "💥", "helper": "💥", "readOnly": "💥" }',
+      );
+
+      const [actualImplementation] = registry.getImplementations(
+        MyByReferenceDef,
+        args,
+        {},
+      ) as MyByReferenceImpl[];
+
+      expect(actualImplementation).toBeInstanceOf(MyByReferenceImpl);
+      expect(actualImplementation.constructor).toBe(MyByReferenceImpl);
+      expect(actualImplementation._call()).toEqual('🔗');
+      expect(actualImplementation.helper()).toEqual('🛟');
+      expect(actualImplementation.readOnly).toEqual('🔒');
+      expect(actualImplementation.object).toBe(args.object);
+    });
   });
 
   describe('call', () => {
@@ -248,6 +358,40 @@ describe('FunctionRegistry', () => {
       });
 
       await expect(actualPromise).rejects.toThrow(InvalidFunctionArgumentError);
+    });
+
+    it('should validate transformed arguments by default', async () => {
+      registry.registerImplementations(MyCopyingImpl);
+
+      const actualDefinition = await registry.validateArguments(MyCopyingDef, {
+        object: {},
+        date: '2026-01-01T00:00:00.000Z' as any,
+      });
+
+      expect(actualDefinition).toEqual(MyCopyingDef);
+    });
+
+    it('should validate arguments passed by reference', async () => {
+      registry.registerImplementations(MyByReferenceImpl);
+
+      const actualDefinition = await registry.validateArguments(
+        MyByReferenceDef,
+        { object: {}, date: new Date() },
+      );
+
+      expect(actualDefinition).toEqual(MyByReferenceDef);
+    });
+
+    it('should not transform arguments passed by reference before validating them', async () => {
+      registry.registerImplementations(MyByReferenceImpl);
+
+      const actualPromise = registry.validateArguments(MyByReferenceDef, {
+        object: {},
+        date: '2026-01-01T00:00:00.000Z' as any,
+      });
+
+      await expect(actualPromise).rejects.toThrow(InvalidFunctionArgumentError);
+      await expect(actualPromise).rejects.toThrow(/date/);
     });
   });
 

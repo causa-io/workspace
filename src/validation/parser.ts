@@ -38,8 +38,40 @@ export async function parseObject<T extends object>(
   payload: any,
   options: ValidatorOptions = {},
 ): Promise<T> {
-  const classObject = plainToInstance(type, payload);
+  return await validateObject(plainToInstance(type, payload), options);
+}
 
+/**
+ * Checks whether the given object has the same properties as a newly created instance of its class, i.e. whether no
+ * property has been set on it.
+ *
+ * @param classObject The class instance to check.
+ * @returns `true` if no property has been set on the object.
+ */
+function isNewInstance(classObject: object): boolean {
+  const newInstance = new (
+    classObject.constructor as new () => Record<string, unknown>
+  )();
+  return Object.entries(classObject).every(
+    ([k, v]) => Object.hasOwn(newInstance, k) && newInstance[k] === v,
+  );
+}
+
+/**
+ * Validates an object, without transforming it.
+ * If the class of the object is an empty class, the object will pass validation if no property has been set on it,
+ * compared to a newly created instance of the class.
+ *
+ * @param classObject The class instance to validate.
+ * @param options {@link ValidatorOptions} to use when validating the object.
+ *   By default, the {@link validatorOptions} will be inherited.
+ * @returns The validated object.
+ * @throws {@link ValidationError} If one or more errors occur during validation.
+ */
+export async function validateObject<T extends object>(
+  classObject: T,
+  options: ValidatorOptions = {},
+): Promise<T> {
   const metadata = getMetadataStorage().getTargetValidationMetadatas(
     classObject.constructor,
     undefined as any,
@@ -49,7 +81,7 @@ export async function parseObject<T extends object>(
   if (metadata.length === 0) {
     // `class-validator` does not support validating empty classes, i.e. with no decorated properties.
     // This assumes that such classes simply expect empty objects.
-    if (Object.keys(payload).length === 0) {
+    if (isNewInstance(classObject)) {
       return classObject;
     }
 
