@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v1.3.0-beta.1 (2026-10-09)
+
 Features:
 
 - Add the `PassArgumentsByReference` decorator for function definitions. When a definition is decorated, arguments are assigned as is to implementations rather than being copied and transformed using `class-transformer`, and they are validated without being transformed.
